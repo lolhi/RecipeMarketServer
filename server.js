@@ -46,11 +46,7 @@ function MakeDBForPriceInfo(){
 					+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
 
 	if(endYear == date.getFullYear()){
-		console.log('make db finish.');
-		PriceInfo.find(function(err, pi){
-			if(err) console.log('db error: find');
-			console.log('pi length : ' + Object.keys(pi).length);
-		});
+		console.log('make PriceInfodb finish.');
 		MakeDBForRecipeBasics();
 		return;
 	}
@@ -185,6 +181,7 @@ function MakeDBForRecipeBasics(){
 		RecipeBasics.setDebugSum(length);
 
 		if(RecipeBasics.getTotalCount() <= 0){
+			console.log('make RecipeBasicsdb finish.');
 			MakeDBForRecipeMaterial();
 			return;
 		}
@@ -246,6 +243,7 @@ function MakeDBForRecipeMaterial(){
 		RecipeMaterial.setDebugSum(length);
 
 		if(RecipeMaterial.getTotalCount() <= 0){
+			console.log('make RecipeMaterialdb finish.');
 			MakeDBForRecipeProcess();
 			return;
 		}
@@ -308,7 +306,8 @@ function MakeDBForRecipeProcess(){
 		RecipeProcess.setDebugSum(length);
 
 		if(RecipeProcess.getTotalCount() <= 0){
-			console.log('db make finish');
+			console.log('make RecipeProcessdb finish.');
+			console.log('all db make finish');
 			return;
 		}
 		MakeDBForRecipeProcess();
