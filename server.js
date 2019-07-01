@@ -37,10 +37,10 @@ var ServiceKey = config.ServiceKey;
 var dayday = 1;
 var endYear = 2019;
 
-MakeDBForPriceInfo();
+//MakeDBForPriceInfo();
 
 function MakeDBForPriceInfo(){
-	let date = new Date(2013,0,dayday);
+	let date = new Date(2015,0,dayday);
 	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ PriceInfo.getStartIdx() + '/' + PriceInfo.getEndIdx() + '/';
 	var startday = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
 					+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
