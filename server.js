@@ -28,8 +28,10 @@ var PriceInfo = new DBClass(require('./models/priceinfo'));
 var RecipeBasics = new DBClass(require('./models/recipe_basic'));
 var RecipeMaterial = new DBClass(require('./models/recipe_material'));
 var RecipeProcess = new DBClass(require('./models/recipe_process'));
+var TodaySpecialPrice = new DBClass(require('./models/today_sprecial_price'));
+var TodayPriceInfo = new DBClass('');
 
-var router = require('./router/router')(app, PriceInfo, RecipeBasics, RecipeMaterial, RecipeProcess);
+var router = require('./router/router')(app, PriceInfo, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice);
 
 var ServiceKey = config.ServiceKey;
 
@@ -37,7 +39,137 @@ var ServiceKey = config.ServiceKey;
 var dayday = 1;
 var endYear = 2019;
 
-//MakeDBForPriceInfo();
+MakeDBForPriceInfo();
+
+// Get today priceinfomation
+var yesterday = '20190627';
+var jsonStr = '[';
+
+//GetTodayPriceInfo();
+//setInterval(GetTodayPriceInfo, 86400000);
+//MakeTodaySpecialPrice();
+
+function GetTodayPriceInfo(){
+	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ TodayPriceInfo.getStartIdx() + '/' + TodayPriceInfo.getEndIdx() + '/';
+	var tempdate = new Date();
+	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3)
+	var today = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
+	+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
+
+	request({
+        url: url,
+		method: 'GET',
+		qs:{
+			AUCNG_DE: today
+		}
+    }, function (error, response, body) {
+		if(error){
+			console.log('GetTodayPriceInfo request module error : ' + err);
+			return;
+		}
+
+		if(yesterday == today)
+			return;
+		
+		var jsondata = JSON.parse(body);
+
+		if(TodayPriceInfo.getTotalCount() == -1002 ){
+			jsonStr = '[';
+			TodayPriceInfo.setTotalCount(jsondata.Grid_20141119000000000012_1.totalCnt);  	
+		}
+
+		jsondata = jsondata.Grid_20141119000000000012_1.row;
+		var length = Object.keys(jsondata).length;
+
+		console.log('TodayPriceInfo i_0 : ' + TodayPriceInfo.getStartIdx());
+		console.log('TodayPriceInfo totalouCnt : ' +TodayPriceInfo.getTotalCount());
+		console.log('TodayPriceInfo length : ' + length);
+		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
+			if(jsonStr !='['){
+				var temp = JSON.parse(jsonStr + ']');
+				var k;
+				var flag = 0;
+
+				for(k = 0; k < temp.length; k++){
+					 if(temp[k].PRDLST_NM == jsondata[TodayPriceInfo.getJ()].PRDLST_NM && temp[k].SPCIES_NM == jsondata[TodayPriceInfo.getJ()].SPCIES_NM && temp[k].DELNGBUNDLE_QY == jsondata[TodayPriceInfo.getJ()].DELNGBUNDLE_QY){					
+						flag = 1;
+						break;
+					}
+				}
+			}
+			if(flag != 1){
+				if(jsonStr != '[')
+					jsonStr += ',';
+				jsonStr = jsonStr + JSON.stringify(jsondata[TodayPriceInfo.getJ()]);
+			}
+		}
+		TodayPriceInfo.setTotalCount(TodayPriceInfo.getTotalCount() - 1000);
+		TodayPriceInfo.setStartIdx(TodayPriceInfo.getStartIdx() + 1000);
+		TodayPriceInfo.setEndIdx(TodayPriceInfo.getEndIdx() + 1000);
+		TodayPriceInfo.setDebugSum(length);
+
+		if(TodayPriceInfo.getTotalCount() <= 0){
+			console.log('-------------------TodayPriceInfo SUM : ' + TodayPriceInfo.getDebugSum());
+			
+			TodayPriceInfo.setTotalCount(-1002);
+			TodayPriceInfo.setStartIdx(1);
+			TodayPriceInfo.setEndIdx(1000);
+			jsonStr += ']';
+			yesterday = today;
+			MakeTodaySpecialPrice();
+			return;
+		}	
+		GetTodayPriceInfo();
+	});
+}
+
+function MakeTodaySpecialPrice(){
+	var jsondata = JSON.parse(jsonStr);
+	var i;
+
+	for(i = 0; i < jsondata.length; i++){
+		var searchPrdlstName = jsondata[i].PRDLST_NM;
+		var searchSpcieName = jsondata[i].SPCIES_NM.replace(/\(.*$/,'');
+		PriceInfo.DBname.find({
+			PRDLST_NAME: searchPrdlstName,
+			SPCIES_NAME: {$regex:'^' + searchSpcieName}
+		}, function(err, pi){
+			if(pi.length != 0){
+				if(err){
+					console.log(err); 
+					return;
+				}
+				var median = parseInt(pi.length / 2);
+				var cnt = 0;
+				var sum = 0;
+				var avg = 0;
+
+				for(TodaySpecialPrice.setJ(0); TodaySpecialPrice.getJ() < pi.length; TodaySpecialPrice.setJ(TodaySpecialPrice.getJ() + 1)){
+					if(pi[median].WEIGHT_VAL == pi[TodaySpecialPrice.getJ()].WEIGHT_VAL){
+						sum += pi[TodaySpecialPrice.getJ()].AVGPRICE / pi[TodaySpecialPrice.getJ()].WEIGHT_VAL;
+						cnt++;
+					}
+				}
+				avg = sum / cnt;
+	
+				var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
+					PRDLST_NAME: pi[0].PRDLST_NAME,
+					SPCIES_NAME: pi[0].SPCIES_NAME,
+					SPCIES_CODE: pi[0].SPCIES_CODE,
+					AVGPRICE: avg
+				});
+		
+				newTodaySpecialPrice.save(function(err){
+					if(err){
+						console.error(err);
+						return;
+					}
+					//console.log('db save success');
+				});
+			}
+		}).sort('WEIGHT_VAL');
+	}
+}
 
 function MakeDBForPriceInfo(){
 	let date = new Date(2015,0,dayday);
@@ -85,6 +217,7 @@ function MakeDBForPriceInfo(){
 		for(PriceInfo.setJ(0); PriceInfo.getJ() < length; PriceInfo.setJ(PriceInfo.getJ() + 1)){
 			var newPriceInfo = new PriceInfo.DBname({
 				DATE: jsondata[PriceInfo.getJ()].AUCNG_DE,
+				PRDLST_NAME: jsondata[PriceInfo.getJ()].PRDLST_NM,
 				SPCIES_NAME: jsondata[PriceInfo.getJ()].SPCIES_NM,
 				SPCIES_CODE: jsondata[PriceInfo.getJ()].SPCIES_CD,
 				WEIGHT_VAL: jsondata[PriceInfo.getJ()].DELNGBUNDLE_QY,

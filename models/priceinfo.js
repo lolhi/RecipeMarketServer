@@ -3,6 +3,7 @@ var Schema = mongoose.Schema;
 
 var PriceInfoSchema = new Schema({
     DATE: String,
+    PRDLST_NAME: String,
     SPCIES_NAME: String,
     SPCIES_CODE: String,
     WEIGHT_VAL: Number,
