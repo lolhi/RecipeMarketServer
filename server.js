@@ -39,20 +39,29 @@ var ServiceKey = config.ServiceKey;
 var dayday = 1;
 var endYear = 2019;
 
-MakeDBForPriceInfo();
+//MakeDBForPriceInfo();
 
 // Get today priceinfomation
 var yesterday = '20190627';
-var jsonStr = '[';
+var jsonStr = new Array();
+var temp = new Array();
 
 //GetTodayPriceInfo();
 //setInterval(GetTodayPriceInfo, 86400000);
+
+// Test for server
 //MakeTodaySpecialPrice();
+//MakeDBForRecipeBasics();
 
 function GetTodayPriceInfo(){
 	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ TodayPriceInfo.getStartIdx() + '/' + TodayPriceInfo.getEndIdx() + '/';
+
+	var week = new Array('Sun', 'Mon', 'Tue', 'Wen', 'Thr', 'Fri', 'Sat');
 	var tempdate = new Date();
-	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3)
+	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
+	var tempweek = week[date.getDay()];
+	if(tempweek == 'Sun')
+		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 4);
 	var today = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
 	+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
 
@@ -74,7 +83,7 @@ function GetTodayPriceInfo(){
 		var jsondata = JSON.parse(body);
 
 		if(TodayPriceInfo.getTotalCount() == -1002 ){
-			jsonStr = '[';
+			jsonStr = new Array();
 			TodayPriceInfo.setTotalCount(jsondata.Grid_20141119000000000012_1.totalCnt);  	
 		}
 
@@ -84,25 +93,10 @@ function GetTodayPriceInfo(){
 		console.log('TodayPriceInfo i_0 : ' + TodayPriceInfo.getStartIdx());
 		console.log('TodayPriceInfo totalouCnt : ' +TodayPriceInfo.getTotalCount());
 		console.log('TodayPriceInfo length : ' + length);
-		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
-			if(jsonStr !='['){
-				var temp = JSON.parse(jsonStr + ']');
-				var k;
-				var flag = 0;
 
-				for(k = 0; k < temp.length; k++){
-					 if(temp[k].PRDLST_NM == jsondata[TodayPriceInfo.getJ()].PRDLST_NM && temp[k].SPCIES_NM == jsondata[TodayPriceInfo.getJ()].SPCIES_NM && temp[k].DELNGBUNDLE_QY == jsondata[TodayPriceInfo.getJ()].DELNGBUNDLE_QY){					
-						flag = 1;
-						break;
-					}
-				}
-			}
-			if(flag != 1){
-				if(jsonStr != '[')
-					jsonStr += ',';
-				jsonStr = jsonStr + JSON.stringify(jsondata[TodayPriceInfo.getJ()]);
-			}
-		}
+		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1))
+			temp.push(jsondata[TodayPriceInfo.getJ()]);
+
 		TodayPriceInfo.setTotalCount(TodayPriceInfo.getTotalCount() - 1000);
 		TodayPriceInfo.setStartIdx(TodayPriceInfo.getStartIdx() + 1000);
 		TodayPriceInfo.setEndIdx(TodayPriceInfo.getEndIdx() + 1000);
@@ -111,10 +105,56 @@ function GetTodayPriceInfo(){
 		if(TodayPriceInfo.getTotalCount() <= 0){
 			console.log('-------------------TodayPriceInfo SUM : ' + TodayPriceInfo.getDebugSum());
 			
+			var r,c;
+			
+			for(r = 0; r < temp.length - 2; r++){
+				var temp2 = new Array();
+				var k;
+				var flag1 = 0
+				for(k = 0; k < jsonStr.length; k++){
+					if(jsonStr[k].PRDLST_NM == temp[r].PRDLST_NM && jsonStr[k].SPCIES_NM == temp[r].SPCIES_NM){
+						flag1 = 1;
+						break;
+					}
+				}
+				if(flag1 == 1)
+						continue;
+				temp2.push(temp[r]);
+				for(c = r + 1; c < temp.length; c++){
+					if(temp[r].PRDLST_NM == temp[c].PRDLST_NM && temp[r].SPCIES_NM == temp[c].SPCIES_NM){
+						temp2.push(temp[c]);
+					}
+				}
+
+				temp2.sort(function (a, b) { 
+					return a.DELNGBUNDLE_QY < b.DELNGBUNDLE_QY ? -1 : a.DELNGBUNDLE_QY > b.DELNGBUNDLE_QY ? 1 : 0;  
+				});
+				var median = parseInt(temp2.length/2)
+				var cnt = 0;
+				var sum = 0;
+				var avg = 0;
+
+				var idx;
+				for(idx = 0; idx < temp2.length; idx++){
+					if(temp2[median].DELNGBUNDLE_QY == temp2[idx].DELNGBUNDLE_QY){
+						sum += temp2[idx].AVRG_AMT / (temp2[idx].DELNGBUNDLE_QY * 10);
+						cnt++;
+					}
+				}
+				avg = sum / cnt;
+				temp2[median].AVRG_AMT = avg;
+				var obj = new Object();
+				obj.PRDLST_NM = temp2[median].PRDLST_NM;
+				obj.SPCIES_NM = temp2[median].SPCIES_NM;
+				obj.SPCIES_CD = temp2[median].SPCIES_CD;
+				obj.WEIGHT_VAL = temp2[median].DELNGBUNDLE_QY;
+				obj.AVGPRICE = avg;
+
+				jsonStr.push(obj);
+			}
 			TodayPriceInfo.setTotalCount(-1002);
 			TodayPriceInfo.setStartIdx(1);
 			TodayPriceInfo.setEndIdx(1000);
-			jsonStr += ']';
 			yesterday = today;
 			MakeTodaySpecialPrice();
 			return;
@@ -124,15 +164,27 @@ function GetTodayPriceInfo(){
 }
 
 function MakeTodaySpecialPrice(){
-	var jsondata = JSON.parse(jsonStr);
-	var i;
+	console.log('db save start!');
+	//디비 지우기
+	TodaySpecialPrice.DBname.remove({}, function(err, output){
+		if(err) console.log('error: database remove failure'); return;
 
-	for(i = 0; i < jsondata.length; i++){
-		var searchPrdlstName = jsondata[i].PRDLST_NM;
-		var searchSpcieName = jsondata[i].SPCIES_NM.replace(/\(.*$/,'');
+			/* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
+			if(!output.result.n) return res.status(404).json({ error: "book not found" });
+			res.json({ message: "book deleted" });
+			*/
+
+			console.log('db remove success');
+	});
+	var i;
+	for(i = 0; i < jsonStr.length; i++){
+		var searchPrdlstName = jsonStr[i].PRDLST_NM;
+		var searchSpcieName = jsonStr[i].SPCIES_NM;
+		var searchWeight = jsonStr[i].WEIGHT_VAL;
 		PriceInfo.DBname.find({
 			PRDLST_NAME: searchPrdlstName,
-			SPCIES_NAME: {$regex:'^' + searchSpcieName}
+			SPCIES_NAME: searchSpcieName,
+			WEIGHT_VAL: searchWeight
 		}, function(err, pi){
 			if(pi.length != 0){
 				if(err){
@@ -145,27 +197,33 @@ function MakeTodaySpecialPrice(){
 				var avg = 0;
 
 				for(TodaySpecialPrice.setJ(0); TodaySpecialPrice.getJ() < pi.length; TodaySpecialPrice.setJ(TodaySpecialPrice.getJ() + 1)){
-					if(pi[median].WEIGHT_VAL == pi[TodaySpecialPrice.getJ()].WEIGHT_VAL){
-						sum += pi[TodaySpecialPrice.getJ()].AVGPRICE / pi[TodaySpecialPrice.getJ()].WEIGHT_VAL;
-						cnt++;
-					}
+					sum += pi[TodaySpecialPrice.getJ()].AVGPRICE / (pi[TodaySpecialPrice.getJ()].WEIGHT_VAL * 10);
+					cnt++;
 				}
 				avg = sum / cnt;
-	
-				var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
-					PRDLST_NAME: pi[0].PRDLST_NAME,
-					SPCIES_NAME: pi[0].SPCIES_NAME,
-					SPCIES_CODE: pi[0].SPCIES_CODE,
-					AVGPRICE: avg
-				});
-		
-				newTodaySpecialPrice.save(function(err){
-					if(err){
-						console.error(err);
-						return;
+				
+				var r;
+				for(r = 0; r < jsonStr.length; r++){
+					if(jsonStr[r].PRDLST_NM == pi[median].PRDLST_NAME && jsonStr[r].SPCIES_NM == pi[median].SPCIES_NAME){
+						if(avg -  jsonStr[r].AVGPRICE > 0){
+							var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
+								PRDLST_NAME: jsonStr[r].PRDLST_NM,
+								SPCIES_NAME: jsonStr[r].SPCIES_NM,
+								SPCIES_CODE: jsonStr[r].SPCIES_CD,
+								AVGPRICE: jsonStr[r].AVRG_AMT
+							});
+					
+							newTodaySpecialPrice.save(function(err){
+								if(err){
+									console.error(err);
+									return;
+								}
+								//console.log('db save success');
+							});
+						}
+						break;
 					}
-					//console.log('db save success');
-				});
+				}
 			}
 		}).sort('WEIGHT_VAL');
 	}
