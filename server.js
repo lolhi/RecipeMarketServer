@@ -46,8 +46,8 @@ var yesterday = '20190627';
 var jsonStr = new Array();
 var temp = new Array();
 
-//GetTodayPriceInfo();
-//setInterval(GetTodayPriceInfo, 86400000);
+GetTodayPriceInfo();
+setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
@@ -186,11 +186,11 @@ function MakeTodaySpecialPrice(){
 			SPCIES_NAME: searchSpcieName,
 			WEIGHT_VAL: searchWeight
 		}, function(err, pi){
+			if(err){
+				console.log(err); 
+				return;
+			}
 			if(pi.length != 0){
-				if(err){
-					console.log(err); 
-					return;
-				}
 				var median = parseInt(pi.length / 2);
 				var cnt = 0;
 				var sum = 0;
