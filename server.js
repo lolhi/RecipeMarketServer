@@ -225,7 +225,7 @@ function MakeTodaySpecialPrice(){
 					}
 				}
 			}
-		}).sort('WEIGHT_VAL');
+		});
 	}
 }
 
