@@ -3,10 +3,10 @@ var Schema = mongoose.Schema;
 
 var PriceInfoSchema = new Schema({
     DATE: String,
-    PRDLST_NAME: String,
-    SPCIES_NAME: String,
+    PRDLST_NAME: {type: String, index: true},
+    SPCIES_NAME: {type: String, index: true},
     SPCIES_CODE: String,
-    WEIGHT_VAL: Number,
+    WEIGHT_VAL: {type: Number, index: true},
     WEIGHT_UNIT: String,
     AVGPRICE: Number
 });
