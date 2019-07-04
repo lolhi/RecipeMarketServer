@@ -1,15 +1,14 @@
-module.exports = function(app, PriceInfo,  RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice){
+module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice){
     var respond;
     var respond2;
     var call = 0;
 
-    app.get('/',function(req,res){
+    app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){
                 console.error(err);
                 return;
             }
-            console.log('find start');
             respond = new Array();
             respond2 = new Array();
             FindMaterial(tpi, res);
