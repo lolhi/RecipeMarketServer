@@ -10,6 +10,7 @@ var db = mongoose.connection;
 db.on('error', console.error);
 db.once('open', function(){
     // CONNECTED TO MONGODB SERVER
+<<<<<<< Updated upstream
     console.log("Connected to mongod server");
     PriceInfo.DBname.count({},function(err, count){
 	if(err) console.log(err);
@@ -27,6 +28,9 @@ db.once('open', function(){
 	if(err) console.log(err);
 	console.log('Process : ' + count);
     });
+=======
+	console.log("Connected to mongod server");
+>>>>>>> Stashed changes
 });
 
 mongoose.connect(config.dburi);

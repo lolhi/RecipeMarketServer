@@ -45,7 +45,18 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                                 console.error(err);
                                 return;
                             }
-                            respond2.push(rb);
+                            var d;
+                            var flag1 = 0;
+                            for(d = 0; d < respond2.length; d++) {
+                                if(respond2[d].RECIPE_ID == rb.RECIPE_ID) {
+                                    flag = 1;
+                                    break;
+                                }
+                            }
+                            if(respond2.length == 0 || flag1 == 0){
+                                respond2.push(rb);
+                            }
+
                             if(respond2.length == 10)
                                 res.json(respond2);
                         });
