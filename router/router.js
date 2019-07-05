@@ -15,6 +15,18 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }).limit(100);
     });
 
+    app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
+        RecipeBasics.DBname.find({NATION_NM: req.params.SEARCHSTRING}, function(err,rb){
+            if(err){
+                console.log(err);
+                return;
+            }
+
+            res.json(rb);
+        })
+
+    });
+
     function FindMaterial(tpi, res){
         var i;
         for(i = 0; i < tpi.length; i++){
