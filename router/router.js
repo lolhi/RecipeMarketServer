@@ -49,7 +49,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                             var flag1 = 0;
                             for(d = 0; d < respond2.length; d++) {
                                 if(respond2[d].RECIPE_ID == rb.RECIPE_ID) {
-                                    flag = 1;
+                                    flag1 = 1;
                                     break;
                                 }
                             }
@@ -57,8 +57,10 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                                 respond2.push(rb);
                             }
 
-                            if(respond2.length == 10)
+                            if(respond2.length == 10){
                                 res.json(respond2);
+                                respond2.push(rb);
+                            }
                         });
                     }
                     return;
