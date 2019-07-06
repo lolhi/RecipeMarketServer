@@ -35,9 +35,21 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
-var server = app.listen(8080, function(){
-  console.log("Express server has started on port 3000");
-})
+//var server = app.listen(8080, function(){
+// console.log("Express server has started on port 3000");
+//});
+
+app.get('/', function (req, res) {
+	res.end('hello world?');
+});
+
+require('greenlock-express').create({
+	server: 'staging',
+	email: config.email,
+	agreeTos: true,
+	approveDomains: [ config.domain ],
+	app: app
+	}).listen(3080, 3443);
 
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
