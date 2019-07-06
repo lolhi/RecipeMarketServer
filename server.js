@@ -44,10 +44,21 @@ app.get('/', function (req, res) {
 });
 
 require('greenlock-express').create({
-	server: 'staging',
-	email: config.email,
-	agreeTos: true,
-	approveDomains: [ config.domain ],
+	version: 'draft-11', // 버전2
+	configDir: '/etc/letsencrypt',
+	server: 'https://acme-v02.api.letsencrypt.org/directory'  
+  	server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
+  	approveDomains: (opts, certs, cb) => {
+    	if (certs) {
+     		opts.domains = [config.domain];
+    	} else {
+     		opts.email = config.email;
+      		opts.agreeTos = true;
+    	}
+    	cb(null, { options: opts, certs });
+  	},
+  	renewWithin: 81 * 24 * 60 * 60 * 1000,
+  	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 	}).listen(3080, 3443);
 
