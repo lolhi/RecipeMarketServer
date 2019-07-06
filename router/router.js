@@ -3,6 +3,10 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     var respond2;
     var call = 0;
 
+    app.get('/.well-known/acme-challenge/XSVM2lU73AWP1fJb0l-MQNKKBWqftZXddUP-wQhihjo',function(req,res){
+        res.end('XSVM2lU73AWP1fJb0l-MQNKKBWqftZXddUP-wQhihjo.ARrnk9GBHJb2QjljnJ5GLlJDW89kbLnvBsAfBAhnE5k');
+    });
+
     app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){
