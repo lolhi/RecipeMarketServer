@@ -1,6 +1,7 @@
 module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs){
     var respond;
     var respond2;
+    var searchres;
     var call = 0;
 
     app.get('/TodaySpecialPrice',function(req,res){
@@ -16,7 +17,68 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     });
 
     app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
-        RecipeBasics.DBname.find({NATION_NM: req.params.SEARCHSTRING}, function(err,rb){
+        RecipeMaterial.DBname.find({IRDNT_NM: req.params.SEARCHSTRING}, function(err,rm){
+            if(err){
+                console.log(err);
+                return;
+            }
+            searchres = new Array();
+            if(rm.length != 0){
+                var i;
+                var lenlen = 0;
+                
+                for(i = 0; i < rm.length; i++){
+                    RecipeBasics.DBname.count({RECIPE_ID: rm[i].RECIPE_ID},function(err, count){
+                        if(err) console.log(err);
+                        lenlen += count; 
+                    });
+                }
+                for(i = 0; i < rm.length; i++){
+                    RecipeBasics.DBname.find({RECIPE_ID: rm[i].RECIPE_ID}, function(err, rb){
+                        if(err){
+                            console.log(err);
+                            return;
+                        }
+                        if(rb.length !=0) {
+                            var j;
+                            for(j = 0; j < rb.length; j++)
+                                searchres.push(rb[j]);
+                            if(searchres.length == lenlen){
+                                res.json(searchres);
+                                searchres.push(rb);
+                            }
+                        }
+                    });
+                }
+                return;
+            }
+            else{
+                RecipeBasics.DBname.find({$or: [ { RECIPE_NM_KO: req.params.SEARCHSTRING }, 
+                    { NATION_NM: req.params.SEARCHSTRING }, 
+                    { TY_NM: req.params.SEARCHSTRING } ] }, function(err, rb){
+                    var len = rb.length;
+                    if(err){
+                        console.log(err);
+                        return;
+                    }
+                    if(rb.length != 0){
+                        res.json(rb);
+                    }
+                    else{
+                        res.json([]);
+                    }
+                });
+            }
+        });
+    });
+
+    app.get('/SearchRecipe/:CATEGORY/:SEARCHSTRING',function(req,res){
+        var category = req.params.CATEGORY;
+        var value = req.params.SEARCHSTRING;
+        var query = {};
+        query[category] = value;
+
+        RecipeBasics.DBname.find(query, function(err,rb){
             if(err){
                 console.log(err);
                 return;
