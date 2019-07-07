@@ -1,11 +1,7 @@
-module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice){
+module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs){
     var respond;
     var respond2;
     var call = 0;
-
-    app.get('/.well-known/acme-challenge/XSVM2lU73AWP1fJb0l-MQNKKBWqftZXddUP-wQhihjo',function(req,res){
-        res.end('XSVM2lU73AWP1fJb0l-MQNKKBWqftZXddUP-wQhihjo.ARrnk9GBHJb2QjljnJ5GLlJDW89kbLnvBsAfBAhnE5k');
-    });
 
     app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
@@ -25,11 +21,31 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 console.log(err);
                 return;
             }
-
             res.json(rb);
         })
-
     });
+
+    app.get('/GetNotice',function(req, res){
+        Notice.DBname.find({},function(err,nt){
+            if(err){
+                console.log(err);
+                return;
+            }
+            res.json(nt);
+        })
+    });
+
+    app.get('/img/:IMGSRC', function(req,res){
+        fs.readFile(__dirname + "/../img/" + req.params.IMGSRC,function(err,data){
+            if(err){
+                console.log(err);
+                return;
+            }
+            res.writeHead(200, { "Context-Type": "image/jpg" });
+            res.write(data);
+            res.end();
+        })//end readFile()
+      })//end app.get()
 
     function FindMaterial(tpi, res){
         var i;

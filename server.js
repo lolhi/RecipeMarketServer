@@ -4,6 +4,8 @@ var bodyParser = require('body-parser');
 var request = require('request');
 var mongoose = require('mongoose');
 var config = require('./config');
+var noticeconfig = require('./noticeString');
+var fs = require('fs');
 
 // CONNECT TO MONGODB SERVER
 var db = mongoose.connection;
@@ -12,21 +14,54 @@ db.once('open', function(){
     // CONNECTED TO MONGODB SERVER
     console.log("Connected to mongod server");
     PriceInfo.DBname.count({},function(err, count){
-	if(err) console.log(err);
-	console.log('PriceInfo : ' + count);
+		if(err) console.log(err);
+		console.log('PriceInfo : ' + count);
     });
     RecipeBasics.DBname.count({},function(err, count){
-	if(err) console.log(err);
-	console.log('Basics : ' + count);
+		if(err) console.log(err);
+		console.log('Basics : ' + count);
     });
-    RecipeMaterial.DBname.count({},function(err, count){
-	if(err) console.log(err);
-	console.log('Meterial : ' + count);
+	RecipeMaterial.DBname.count({},function(err, count){
+		if(err) console.log(err);
+		console.log('Meterial : ' + count);
     });
-    RecipeProcess.DBname.count({},function(err, count){
-	if(err) console.log(err);
-	console.log('Process : ' + count);
-    });
+	RecipeProcess.DBname.count({},function(err, count){
+		if(err) console.log(err);
+		console.log('Process : ' + count);
+	});
+	Notice.DBname.remove({}, function(err, output){
+		if(err) {
+			console.log('error: database remove failure'); 
+			return;
+		}
+		console.log('db remove success');
+		var newNotice = new Notice.DBname({
+			NOTICE_TITLE: noticeconfig.NOTICE_TITLE1,
+			NOTICE_IMG: noticeconfig.NOTICE_IMG1,
+			NOTICE_WRITER: noticeconfig.NOTICE_WRITER,
+			NOTICE_CONTENTS: noticeconfig.NOTICE_CONTENTS1
+		});
+		newNotice.save(function(err){
+			if(err){
+				console.error(err);
+				return;
+			}
+			//console.log('db save success');
+		});
+		newNotice = new Notice.DBname({
+			NOTICE_TITLE: noticeconfig.NOTICE_TITLE1,
+			NOTICE_IMG: noticeconfig.NOTICE_IMG1,
+			NOTICE_WRITER: noticeconfig.NOTICE_WRITER,
+			NOTICE_CONTENTS: noticeconfig.NOTICE_CONTENTS1
+		});
+		newNotice.save(function(err){
+			if(err){
+				console.error(err);
+				return;
+			}
+			//console.log('db save success');
+		});
+	});	
 });
 
 mongoose.connect(config.dburi);
@@ -68,9 +103,10 @@ var RecipeBasics = new DBClass(require('./models/recipe_basic'));
 var RecipeMaterial = new DBClass(require('./models/recipe_material'));
 var RecipeProcess = new DBClass(require('./models/recipe_process'));
 var TodaySpecialPrice = new DBClass(require('./models/today_sprecial_price'));
+var Notice = new DBClass(require('./models/notice'));
 var TodayPriceInfo = new DBClass('');
 
-var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice);
+var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs);
 
 var ServiceKey = config.ServiceKey;
 
@@ -85,8 +121,8 @@ var yesterday = '20190627';
 var jsonStr = new Array();
 var temp = new Array();
 
-GetTodayPriceInfo();
-setInterval(GetTodayPriceInfo, 86400000);
+//GetTodayPriceInfo();
+//setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
