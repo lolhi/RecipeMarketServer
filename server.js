@@ -35,32 +35,32 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
-//var server = app.listen(8080, function(){
-// console.log("Express server has started on port 3000");
-//});
+var server = app.listen(8080, function(){
+ console.log("Express server has started on port 8080");
+});
 
 app.get('/', function (req, res) {
 	res.end('hello world?');
 });
 
-require('greenlock-express').create({
-	version: 'draft-11', // 버전2
-	configDir: '/etc/letsencrypt',
-	server: 'https://acme-v02.api.letsencrypt.org/directory'  
-  	server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
-  	approveDomains: (opts, certs, cb) => {
-    	if (certs) {
-     		opts.domains = [config.domain];
-    	} else {
-     		opts.email = config.email;
-      		opts.agreeTos = true;
-    	}
-    	cb(null, { options: opts, certs });
-  	},
-  	renewWithin: 81 * 24 * 60 * 60 * 1000,
-  	renewBy: 80 * 24 * 60 * 60 * 1000,
-	app: app
-	}).listen(3080, 3443);
+//require('greenlock-express').create({
+//	version: 'draft-11', // 버전2
+//	configDir: '/etc/letsencrypt',
+//	server: 'https://acme-v02.api.letsencrypt.org/directory',  
+//  	//server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
+//  	approveDomains: (opts, certs, cb) => {
+//    	if (certs) {
+//     		opts.domains = [config.domain];
+//    	} else {
+//     		opts.email = config.email;
+//      		opts.agreeTos = true;
+//    	}
+//    	cb(null, { options: opts, certs });
+//  	},
+//  	renewWithin: 81 * 24 * 60 * 60 * 1000,
+//  	renewBy: 80 * 24 * 60 * 60 * 1000,
+//	app: app
+//	}).listen(3080, 3443);
 
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));

@@ -11,6 +11,9 @@
   "dependencies": {
     "body-parser": "^1.18.3",
     "express": "^4.16.3",
+    "greenlock-express": "^2.7.10",
+    "greenlock-store-fs": "^3.0.2",
+    "le-acme-core": "^2.1.4",
     "mongoose": "^5.6.1",
     "request": "^2.88.0"
   }
