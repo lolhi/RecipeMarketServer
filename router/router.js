@@ -16,6 +16,16 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }).limit(100);
     });
 
+    app.get('/FullRecipe',function(req,res){
+        RecipeBasics.DBname.find({}, function(err, rb){
+            if(err){
+                console.error(err);
+                return;
+            }
+            res.json(rb);
+        });
+    });
+
     app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
         RecipeMaterial.DBname.find({IRDNT_NM: req.params.SEARCHSTRING}, function(err,rm){
             if(err){
