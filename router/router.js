@@ -112,6 +112,21 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         })
     });
 
+    app.get('/SearchRecipe/:CATEGORY/:SEARCHSTRING/:SEARCHSTRING2/:SEARCHSTRING3',function(req,res){
+        var category = req.params.CATEGORY;
+        var value = req.params.SEARCHSTRING + '/' + req.params.SEARCHSTRING2 + '/' + req.params.SEARCHSTRING3;
+        var query = {};
+        query[category] = value;
+
+        RecipeBasics.DBname.find(query, function(err,rb){
+            if(err){
+                console.log(err);
+                return;
+            }
+            res.json(rb);
+        })
+    });
+
     app.get('/GetNotice',function(req, res){
         Notice.DBname.find({},function(err,nt){
             if(err){
