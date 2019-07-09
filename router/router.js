@@ -4,6 +4,9 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     var searchres;
     var call = 0;
 
+    app.get('/PrivacyPolicy',function(req,res){
+        res.sendfile('/PrivacyPolicy.html', {root: __dirname});
+    });
     app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){
