@@ -29,6 +29,26 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         });
     });
 
+    app.get('/GetMaterial/:RECIPEID',function(req,res){
+        RecipeMaterial.DBname.find({RECIPE_ID: req.params.RECIPEID}, function(err, rm){
+            if(err){
+                console.error(err);
+                return;
+            }
+            res.json(rm);
+        });
+    });
+
+    app.get('/GetProcess/:RECIPEID',function(req,res){
+        RecipeMaterial.DBname.find({RECIPE_ID: req.params.RECIPEID}, function(err, rp){
+            if(err){
+                console.error(err);
+                return;
+            }
+            res.json(rp);
+        });
+    });
+
     app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
         RecipeMaterial.DBname.find({IRDNT_NM: req.params.SEARCHSTRING}, function(err,rm){
             if(err){
