@@ -40,7 +40,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     });
 
     app.get('/GetProcess/:RECIPEID',function(req,res){
-        RecipeMaterial.DBname.find({RECIPE_ID: req.params.RECIPEID}, function(err, rp){
+        RecipeProcess.DBname.find({RECIPE_ID: req.params.RECIPEID}, function(err, rp){
             if(err){
                 console.error(err);
                 return;
