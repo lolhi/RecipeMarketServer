@@ -6,7 +6,6 @@ var mongoose = require('mongoose');
 var config = require('./config');
 var noticeconfig = require('./noticeString');
 var fs = require('fs');
-var createServer = require("auto-sni");
 
 // CONNECT TO MONGODB SERVER
 var db = mongoose.connection;
@@ -71,6 +70,33 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
+var server = app.listen(8080, function(){
+ console.log("Express server has started on port 8080");
+});
+
+app.get('/', function (req, res) {
+	res.end('hello world?');
+});
+
+//require('greenlock-express').create({
+//	version: 'draft-11', // 버전2
+//	configDir: '/etc/letsencrypt',
+//	server: 'https://acme-v02.api.letsencrypt.org/directory',  
+//  	//server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
+//  	approveDomains: (opts, certs, cb) => {
+//    	if (certs) {
+//     		opts.domains = [config.domain];
+//    	} else {
+//     		opts.email = config.email;
+//      		opts.agreeTos = true;
+//    	}
+//    	cb(null, { options: opts, certs });
+//  	},
+//  	renewWithin: 81 * 24 * 60 * 60 * 1000,
+//  	renewBy: 80 * 24 * 60 * 60 * 1000,
+//	app: app
+//	}).listen(3080, 3443);
+
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
 var RecipeBasics = new DBClass(require('./models/recipe_basic'));
@@ -80,18 +106,8 @@ var TodaySpecialPrice = new DBClass(require('./models/today_sprecial_price'));
 var Notice = new DBClass(require('./models/notice'));
 var TodayPriceInfo = new DBClass('');
 
-createServer({
-	email: config.email, // Emailed when certificates expire.
-	agreeTos: true, // Required for letsencrypt.
-	debug: true, // Add console messages and uses staging LetsEncrypt server. (Disable in production)
-	domains: config.domain, // List of accepted domain names. (You can use nested arrays to register bundles with LE).
-	dir: "~/letsencrypt/etc", // Directory for storing certificates. Defaults to "~/letsencrypt/etc" if not present.
-	ports: {
-	  http: 8080, // Optionally override the default http port.
-	  https: 443 // // Optionally override the default https port.
-	}
-}, app);
 var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs);
+
 var ServiceKey = config.ServiceKey;
 
 // MakeDBForPriceInfo
