@@ -64,20 +64,22 @@ db.once('open', function(){
 	});	
 });
 
-mongoose.connect(config.dburi);
+mongoose.connect(config.dburi, { useNewUrlParser: true });
 
 app.use(express.static('public'));
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded());
+app.use(bodyParser.urlencoded({
+   extended: true
+}));
 
-//var server = app.listen(8080, function(){
-// console.log("Express server has started on port 8080");
-//});
+var server = app.listen(8080, function(){
+ console.log("Express server has started on port 8080");
+});
 
 app.get('/', function (req, res) {
 	res.end('hello world?');
 });
-
+/*
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
 	configDir: '/etc/letsencrypt',
@@ -96,6 +98,7 @@ require('greenlock-express').create({
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 }).listen(80, 443);
+*/
 
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
@@ -103,10 +106,11 @@ var RecipeBasics = new DBClass(require('./models/recipe_basic'));
 var RecipeMaterial = new DBClass(require('./models/recipe_material'));
 var RecipeProcess = new DBClass(require('./models/recipe_process'));
 var TodaySpecialPrice = new DBClass(require('./models/today_sprecial_price'));
+var UserData = new DBClass(require('./models/userdata'));
 var Notice = new DBClass(require('./models/notice'));
 var TodayPriceInfo = new DBClass('');
 
-var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs);
+var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData);
 
 var ServiceKey = config.ServiceKey;
 

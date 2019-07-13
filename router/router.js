@@ -1,4 +1,4 @@
-module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs){
+module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData){
     var respond;
     var respond2;
     var searchres;
@@ -7,6 +7,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     app.get('/PrivacyPolicy',function(req,res){
         res.sendfile('/PrivacyPolicy.html', {root: __dirname});
     });
+
     app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){
@@ -166,11 +167,40 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 console.log(err);
                 return;
             }
-            res.writeHead(200, { "Context-Type": "image/jpg" });
+            res.writeHead(200, { "Content-Type": "image/jpg" });
             res.write(data);
             res.end();
         })//end readFile()
       })//end app.get()
+
+    var isFormData = function(req){
+         var type = req.headers['content-type'] || '';
+         return 0 == type.indexOf('application/json');
+    }
+    
+    app.post('/RegisterUser', function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        
+        console.log("ID : " + req.body.ID +"\nNICKNAME : " + req.body.NICKNAME + "\nPROFILE_IMG : " + req.body.PROFILE_IMG + "\nLIKE : " + req.body.LIKE[0].RECIPE_ID);
+        var newUserData = new UserData.DBname({
+            ID: req.body.ID,
+            NICKNAME: req.body.NICKNAME,
+            PROFILE_IMG: req.body.PROFILE_IMG,
+            LIKE: req.body.LIKE
+        });
+
+        newUserData.save(function(err){
+            if(err){
+                console.error(err);
+                return;
+            }
+            console.log('db save success');
+            res.end('uesr data save success in db');
+        });
+    });
 
     function FindMaterial(tpi, res){
         var i;
