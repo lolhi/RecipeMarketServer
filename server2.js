@@ -115,10 +115,13 @@ var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, Recip
 var ServiceKey = config.ServiceKey;
 
 // MakeDBForPriceInfo
-var dayday = 1;
+var currDay = 1;
+var currYear = 2014;
 var endYear = 2019;
+var predMonth;
 
-//MakeDBForPriceInfo();
+MakeDBForPriceInfo();
+setInterval(MakeDBForPriceInfo, 2629800000);
 
 // Get today priceinfomation
 var yesterday = '20190627';
@@ -289,7 +292,7 @@ function MakeTodaySpecialPrice(){
 								PRDLST_NAME: jsonStr[r].PRDLST_NM,
 								SPCIES_NAME: jsonStr[r].SPCIES_NM,
 								SPCIES_CODE: jsonStr[r].SPCIES_CD,
-								AVGPRICE: jsonStr[r].AVRG_AMT
+								AVGPRICE: avg -  jsonStr[r].AVGPRICE
 							});
 					
 							newTodaySpecialPrice.save(function(err){
@@ -309,14 +312,22 @@ function MakeTodaySpecialPrice(){
 }
 
 function MakeDBForPriceInfo(){
-	let date = new Date(2018,0,dayday);
+	var tempdate = new Date();
+	var Today = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
+	predMonth = Today.getMonth()+1;
+	let date = new Date(currYear,Today.getMonth(),currDay);
 	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ PriceInfo.getStartIdx() + '/' + PriceInfo.getEndIdx() + '/';
 	var startday = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
 					+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
 
+	if(date.getMonth() + 1 != predMonth){
+		currDay = 1;
+		currYear++;
+		MakeDBForPriceInfo();
+	}
+
 	if(endYear == date.getFullYear()){
 		console.log('make PriceInfodb finish.');
-		MakeDBForRecipeBasics();
 		return;
 	}
 
@@ -332,14 +343,17 @@ function MakeDBForPriceInfo(){
 		if(PriceInfo.getTotalCount() == -1001 || PriceInfo.getTotalCount() == -1002 ){
 			if(PriceInfo.getTotalCount() == -1002 ){
 				PriceInfo.DBname.remove({}, function(err, output){
-					if(err) console.log('error: database remove failure'); return;
+					if(err) {
+						console.log('error: database remove failure'); 
+						return;
+					}
 			
-						/* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
-						if(!output.result.n) return res.status(404).json({ error: "book not found" });
-						res.json({ message: "book deleted" });
-						*/
+					/* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
+					if(!output.result.n) return res.status(404).json({ error: "book not found" });
+					res.json({ message: "book deleted" });
+					*/
 			
-						console.log('db remove success');
+					console.log('db remove success');
 				});
 			}
 			PriceInfo.setTotalCount(jsondata.Grid_20141119000000000012_1.totalCnt);  	
@@ -383,7 +397,7 @@ function MakeDBForPriceInfo(){
 			PriceInfo.setTotalCount(-1001);
 			PriceInfo.setStartIdx(1);
 			PriceInfo.setEndIdx(1000);
-			dayday += 1;
+			currDay += 1;
 		}	
 		MakeDBForPriceInfo();
 	});
