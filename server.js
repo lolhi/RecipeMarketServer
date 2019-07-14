@@ -70,14 +70,14 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded());
 
-//var server = app.listen(8080, function(){
- //console.log("Express server has started on port 8080");
-//});
+var server = app.listen(8080, function(){
+console.log("Express server has started on port 8080");
+});
 
 app.get('/', function (req, res) {
 	res.end('hello world?');
 });
-
+/*
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
 	configDir: '/etc/letsencrypt',
@@ -96,7 +96,7 @@ require('greenlock-express').create({
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 }).listen(80, 443);
-
+*/
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
 var RecipeBasics = new DBClass(require('./models/recipe_basic'));

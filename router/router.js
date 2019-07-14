@@ -8,6 +8,12 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         res.sendfile('/PrivacyPolicy.html', {root: __dirname});
     });
 
+    app.get('/Test',function(req,res){
+        TodaySpecialPrice.DBname.find({}, function(err, tpi2){
+            res.json(tpi2);
+        }).sort({AVGPRICE : -1});
+    });
+
     app.get('/TodaySpecialPrice',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){

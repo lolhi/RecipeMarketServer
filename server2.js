@@ -72,17 +72,17 @@ app.use(bodyParser.urlencoded({
    extended: true
 }));
 
-var server = app.listen(8080, function(){
- console.log("Express server has started on port 8080");
-});
+//var server = app.listen(8080, function(){
+// console.log("Express server has started on port 8080");
+//});
 
 app.get('/', function (req, res) {
 	res.end('hello world?');
 });
-/*
+
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
-	configDir: '/etc/letsencrypt',
+	configDir: '~/let',
 	server: 'https://acme-v02.api.letsencrypt.org/directory',  
  	//server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
   	approveDomains: (opts, certs, cb) => {
@@ -98,7 +98,7 @@ require('greenlock-express').create({
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 }).listen(80, 443);
-*/
+
 
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
@@ -120,11 +120,11 @@ var currYear = 2014;
 var endYear = 2019;
 var predMonth;
 
-MakeDBForPriceInfo();
-setInterval(MakeDBForPriceInfo, 2629800000);
+//MakeDBForPriceInfo();
+//setInterval(MakeDBForPriceInfo, 2629800000);
 
 // Get today priceinfomation
-var yesterday = '20190627';
+var yesterday = '20190713';
 var jsonStr = new Array();
 var temp = new Array();
 
