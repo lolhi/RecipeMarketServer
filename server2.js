@@ -272,6 +272,10 @@ function MakeTodaySpecialPrice(){
 				console.log(err); 
 				return;
 			}
+			if(pi.length < 1000){
+				console.log("low data. skip");
+				return;
+			}
 			if(pi.length != 0){
 				var median = parseInt(pi.length / 2);
 				var cnt = 0;
