@@ -23,7 +23,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             respond = new Array();
             respond2 = new Array();
             FindMaterial(tpi, res);
-        }).limit(100);
+        }).sort({AVGPRICE : -1}).limit(100);
     });
 
     app.get('/FullRecipe',function(req,res){
@@ -189,22 +189,33 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
 		    return;
         }
-        
-        console.log("ID : " + req.body.ID +"\nNICKNAME : " + req.body.NICKNAME + "\nPROFILE_IMG : " + req.body.PROFILE_IMG + "\nLIKE : " + req.body.LIKE[0].RECIPE_ID);
-        var newUserData = new UserData.DBname({
-            ID: req.body.ID,
-            NICKNAME: req.body.NICKNAME,
-            PROFILE_IMG: req.body.PROFILE_IMG,
-            LIKE: req.body.LIKE
-        });
-
-        newUserData.save(function(err){
+        UserData.DBname.find({ID: req.body.ID}, function(err, ud){
             if(err){
-                console.error(err);
+                console.log(err);
                 return;
             }
-            console.log('db save success');
-            res.end('uesr data save success in db');
+            if(ud.length == 0){
+                console.log("ID : " + req.body.ID +"\nNICKNAME : " + req.body.NICKNAME + "\nPROFILE_IMG : " + req.body.PROFILE_IMG + "\nLIKE : " + req.body.LIKE[0].RECIPE_ID);
+                var newUserData = new UserData.DBname({
+                    ID: req.body.ID,
+                    NICKNAME: req.body.NICKNAME,
+                    PROFILE_IMG: req.body.PROFILE_IMG,
+                    LIKE: req.body.LIKE
+                });
+
+                newUserData.save(function(err){
+                    if(err){
+                        console.error(err);
+                        return;
+                    }
+                console.log('db save success');
+                res.end('uesr data save success in db');
+                });
+            }
+            else{
+                console.log("user data already exist");
+                res.end('user data already exist');
+            }
         });
     });
 
