@@ -14,9 +14,15 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         });
     });
 
+    app.get('/Test2',function(req,res){
+        TodaySpecialPrice.DBname.find({}, function(err, ud){
+            res.json(ud);
+        });
+    });
+
     app.get('/TestRemove', function(req,res){
         UserData.DBname.remove({}, function(err, output){
-            
+            res.end('remove success');
         });
     });
 
