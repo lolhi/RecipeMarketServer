@@ -9,9 +9,9 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     });
 
     app.get('/Test',function(req,res){
-        TodaySpecialPrice.DBname.find({}, function(err, tpi2){
-            res.json(tpi2);
-        }).sort({AVGPRICE : -1});
+        UserData.DBname.find({}, function(err, ud){
+            res.json(ud);
+        });
     });
 
     app.get('/TodaySpecialPrice',function(req,res){
