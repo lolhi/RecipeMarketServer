@@ -1,4 +1,4 @@
-var express = require('express');
+ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var request = require('request');
@@ -440,7 +440,9 @@ function MakeDBForRecipeBasics(){
 		console.log('RecipeBasic totalouCnt : ' + RecipeBasics.getTotalCount());
 		console.log('RecipeBasic length : ' + length);
 		var tempObj = new Object();
-		tempObj.SEARCH_STRING = "";
+		tempObj.WRITER = "";
+		tempObj.COMM = "";
+		tempObj.TIME = "";
 		var tempArr = new Array();
 		tempArr.push(tempObj);
 		for(RecipeBasics.setJ(0); RecipeBasics.getJ() < length; RecipeBasics.setJ(RecipeBasics.getJ() + 1)){
