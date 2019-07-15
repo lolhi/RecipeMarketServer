@@ -225,12 +225,12 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 return;
             }
             if(ud.length == 0){
-                console.log("ID : " + req.body.ID +"\nNICKNAME : " + req.body.NICKNAME + "\nPROFILE_IMG : " + req.body.PROFILE_IMG + "\nLIKE : " + req.body.LIKE[0].RECIPE_ID);
                 var newUserData = new UserData.DBname({
                     ID: req.body.ID,
                     NICKNAME: req.body.NICKNAME,
                     PROFILE_IMG: req.body.PROFILE_IMG,
-                    LIKE: req.body.LIKE
+		    RECENTSEARCH: req.body.RECENT_SEARCH,
+                    CLIPPING: req.body.CLIPPING
                 });
 
                 newUserData.save(function(err){
@@ -271,7 +271,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                         respond.push(rm);
                     }
                 }
-                if(respond.length == 10){
+                if(respond.length == 20){
                     var k;
                     for(k = 0; k < respond.length; k++){
                         RecipeBasics.DBname.findOne({RECIPE_ID: respond[k].RECIPE_ID},function(err,rb){
@@ -281,6 +281,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                             }
                             var d;
                             var flag1 = 0;
+			    if(rb != null){
                             for(d = 0; d < respond2.length; d++) {
                                 if(respond2[d].RECIPE_ID == rb.RECIPE_ID) {
                                     flag1 = 1;
@@ -295,6 +296,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                                 res.json(respond2);
                                 respond2.push(rb);
                             }
+			    }	
                         });
                     }
                     return;

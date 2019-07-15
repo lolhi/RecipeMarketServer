@@ -128,13 +128,13 @@ var yesterday = '20190713';
 var jsonStr = new Array();
 var temp = new Array();
 
-GetTodayPriceInfo();
-setInterval(GetTodayPriceInfo, 86400000);
+//GetTodayPriceInfo();
+//setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
 //MakeDBForRecipeBasics();
-MakeDBForRecipeBasics();
+//MakeDBForRecipeBasics();
 
 function GetTodayPriceInfo(){
 	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ TodayPriceInfo.getStartIdx() + '/' + TodayPriceInfo.getEndIdx() + '/';
