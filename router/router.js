@@ -195,7 +195,19 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
          var type = req.headers['content-type'] || '';
          return 0 == type.indexOf('application/json');
     }
-    
+    app.post('/UnlinkUser', function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+
+        UserData.DBname.remove({ID: req.body.ID}, function(err, output){
+            if(err) return res.status(500).json({ error: "database failure" });
+
+            res.json({ message: "user deleted" });
+        });
+    })
+
     app.post('/RegisterUser', function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
