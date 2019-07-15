@@ -14,7 +14,8 @@ var RecipeBasicSchema = new Schema({
     LEVEL_NM:       String,           // 난이도
     IRDNT_CODE:     String,           // 재료별 분류(곡류..)
     PC_NM:          String,           // 가격별 분류(5000원...)
-    IMG_URL:        String           // 대표이미지 URL
+    IMG_URL:        String,           // 대표이미지 URL
+    COMMENT:        Array
 });
 
 module.exports = mongoose.model('recipebasic', RecipeBasicSchema);

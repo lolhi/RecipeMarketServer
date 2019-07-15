@@ -5,7 +5,8 @@ var UserDataSchema = new Schema({
     ID: Number,
     NICKNAME: String,
     PROFILE_IMG: String,
-    LIKE: Array
+    RECENTSEARCH: Array,
+    CLIPPING: Array
 });
 
 module.exports = mongoose.model('userdata', UserDataSchema);

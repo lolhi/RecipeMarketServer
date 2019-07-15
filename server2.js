@@ -134,6 +134,7 @@ setInterval(GetTodayPriceInfo, 86400000);
 // Test for server
 //MakeTodaySpecialPrice();
 //MakeDBForRecipeBasics();
+MakeDBForRecipeBasics();
 
 function GetTodayPriceInfo(){
 	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ TodayPriceInfo.getStartIdx() + '/' + TodayPriceInfo.getEndIdx() + '/';
@@ -438,6 +439,10 @@ function MakeDBForRecipeBasics(){
 		console.log('RecipeBasic i_0 : ' + RecipeBasics.getStartIdx());
 		console.log('RecipeBasic totalouCnt : ' + RecipeBasics.getTotalCount());
 		console.log('RecipeBasic length : ' + length);
+		var tempObj = new Object();
+		tempObj.SEARCH_STRING = "";
+		var tempArr = new Array();
+		tempArr.push(tempObj);
 		for(RecipeBasics.setJ(0); RecipeBasics.getJ() < length; RecipeBasics.setJ(RecipeBasics.getJ() + 1)){
 			var newRecipeBasic = new RecipeBasics.DBname({
 				RECIPE_ID:      jsondata[RecipeBasics.getJ()].RECIPE_ID,        // 레시피 아이디
@@ -452,7 +457,8 @@ function MakeDBForRecipeBasics(){
     			LEVEL_NM:       jsondata[RecipeBasics.getJ()].LEVEL_NM,         // 난이도
     			IRDNT_CODE:     jsondata[RecipeBasics.getJ()].IRDNT_CODE,       // 재료별 분류(곡류..)
     			PC_NM:          jsondata[RecipeBasics.getJ()].PC_NM,            // 가격별 분류(5000원...)
-    			IMG_URL:        jsondata[RecipeBasics.getJ()].IMG_URL,          // 대표이미지 URL
+				IMG_URL:        jsondata[RecipeBasics.getJ()].IMG_URL,          // 대표이미지 URL
+				COMMENT:		tempArr
 			});
 
 			newRecipeBasic.save(function(err){

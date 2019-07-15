@@ -20,6 +20,12 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }).sort({AVGPRICE: -1});
     });
 
+    app.get('/Test3',function(req,res){
+        RecipeBasics.DBname.find({}, function(err, ud){
+            res.json(ud);
+        });
+    });
+
     app.get('/TestRemove', function(req,res){
         UserData.DBname.remove({}, function(err, output){
             res.end('remove success');
