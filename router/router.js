@@ -17,7 +17,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     app.get('/Test2',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, ud){
             res.json(ud);
-        });
+        }).sort({AVGPRICE: -1});
     });
 
     app.get('/TestRemove', function(req,res){
@@ -35,7 +35,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             respond = new Array();
             respond2 = new Array();
             FindMaterial(tpi, res);
-        }).sort({AVGPRICE : -1}).limit(100);
+        }).sort({AVGPRICE : -1});
     });
 
     app.get('/FullRecipe',function(req,res){

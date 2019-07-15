@@ -128,8 +128,8 @@ var yesterday = '20190713';
 var jsonStr = new Array();
 var temp = new Array();
 
-//GetTodayPriceInfo();
-//setInterval(GetTodayPriceInfo, 86400000);
+GetTodayPriceInfo();
+setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
@@ -272,7 +272,7 @@ function MakeTodaySpecialPrice(){
 				console.log(err); 
 				return;
 			}
-			if(pi.length < 1000){
+			if(pi.length < 5000){
 				console.log("low data. skip");
 				return;
 			}
