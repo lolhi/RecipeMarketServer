@@ -201,6 +201,29 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
          var type = req.headers['content-type'] || '';
          return 0 == type.indexOf('application/json');
     }
+
+    app.post('/AddClipping', function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        UserData.DBname.findOne({ID: req.body.ID}, function(err,ud){
+            if(err) return res.status(500).json({ error: "add clipping fail" });
+
+            var i;
+            var tempArr = new Array;
+            for(i = 0; i < ud.CLIPPING.length; i++){
+                var tempObj = new Object();
+                tempObj.RECIPE_ID = ud.CLIPPING[i].RECIPE_ID;
+                tempArr.push(tempObj);
+            }
+            var tempObj = new Object();
+            tempObj.RECIPE_ID = req.body.RECIPE_ID;
+            tempArr.push(tempObj);
+            ud.CLIPPING = tempArr;
+        })
+    })
+
     app.post('/UnlinkUser', function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
