@@ -220,8 +220,10 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
             if(err) return res.status(500).json({ error: "get clipping fail" });
            
-	        if(ud.RECENTSEARCH.length == 0)
-		        res.status(200).end("");
+	        if(ud.RECENTSEARCH.length == 0){
+                res.status(200).end("");
+                return;
+            }
             
             res.json(ud.RECENTSEARCH);
         });
@@ -312,8 +314,10 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             if(err) return res.status(500).json({ error: "get clipping fail" });
            
             var i;
-	        if(ud.CLIPPING.length == 0)
-		        res.status(200).end("");
+	        if(ud.CLIPPING.length == 0){
+                res.status(200).end("");
+                return;
+            }
             for(i = 0; i < ud.CLIPPING.length; i++){
                 RecipeBasics.DBname.findOne({RECIPE_ID: ud.CLIPPING[i].RECIPE_ID}, function(err, rb){
                     if(err) return res.status(500).json({ error: "get clipping fail" });
