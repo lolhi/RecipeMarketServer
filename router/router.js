@@ -14,12 +14,6 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         });
     });
 
-    app.get('/Test2',function(req,res){
-        TodaySpecialPrice.DBname.find({}, function(err, ud){
-            res.json(ud);
-        }).sort({AVGPRICE: -1});
-    });
-
     app.get('/Test3',function(req,res){
         RecipeBasics.DBname.find({}, function(err, ud){
             res.json(ud);
@@ -30,6 +24,12 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         UserData.DBname.remove({}, function(err, output){
             res.end('remove success');
         });
+    });
+    
+    app.get('/GetPopular',function(req,res){
+        TodaySpecialPrice.DBname.find({}, function(err, ud){
+            res.json(ud);
+        }).sort({AVGPRICE: -1}).limit(10);
     });
 
     app.get('/TodaySpecialPrice',function(req,res){
