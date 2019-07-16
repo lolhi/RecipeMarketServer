@@ -202,6 +202,34 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
          return 0 == type.indexOf('application/json');
     }
 
+    app.post('/AddResentSearch' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
+            if(err) return res.status(500).json({ error: "add recentsearch fail" });
+           
+            var i;
+            var tempArr = new Array;
+            for(i = 0; i < ud.RECENTSEARCH.length; i++){
+                var tempObj = new Object();
+                tempObj.SEARCH_STRING = ud.RECENTSEARCH[i].SEARCH_STRING;
+                tempArr.push(tempObj);
+            }
+            var tempObj = new Object();
+            tempObj.SEARCH_STRING = req.body.SEARCH_STRING;
+            tempArr.push(tempObj);
+
+            UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{RECENTSEARCH:tempArr}}, function(err1, reply){
+                if(err1) return res.status(500).json({ error: "add recentsearch fail" });
+
+                res.status(200).end('add complete');
+            })
+        });
+
+    });
+
     app.post('/GetClipping' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
@@ -212,12 +240,12 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             if(err) return res.status(500).json({ error: "get clipping fail" });
            
             var i;
-	    if(ud.CLIPPING.length == 0)
-		res.status(200).end("");
+	        if(ud.CLIPPING.length == 0)
+		        res.status(200).end("");
             for(i = 0; i < ud.CLIPPING.length; i++){
                 RecipeBasics.DBname.findOne({RECIPE_ID: ud.CLIPPING[i].RECIPE_ID}, function(err, rb){
                     if(err) return res.status(500).json({ error: "get clipping fail" });
-		    console.log('rb: ' + rb);
+		            console.log('rb: ' + rb);
                     rbfind.push(rb);
                     if(rbfind.length == ud.CLIPPING.length){
                         res.json(rbfind);
@@ -249,7 +277,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 if(err1) return res.status(500).json({ error: "add clipping fail" });
 
                 res.status(200).end('add complete');
-            })
+            });
         });
     })
 
