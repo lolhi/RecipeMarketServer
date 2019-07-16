@@ -210,6 +210,19 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
             if(err) return res.status(500).json({ error: "add recentsearch fail" });
            
+            var k;    
+            var flag = 0;
+            for(k = 0; k < ud.RECENTSEARCH.length; k++){
+                if(ud.RECENTSEARCH[k].SEARCH_STRING == req.body.SEARCH_STRING){
+                    flag = 1;
+                    break;
+                }
+            }
+            if(flag == 1){
+                res.status(200).end("exist");
+                return;
+            }
+
             var i;
             var tempArr = new Array;
             for(i = 0; i < ud.RECENTSEARCH.length; i++){
@@ -262,6 +275,19 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }
         UserData.DBname.findOne({ID: req.body.ID}, function(err,ud){
             if(err) return res.status(500).json({ error: "add clipping fail" });
+            
+            var k;    
+            var flag = 0;
+            for(k = 0; k < ud.CLIPPING.length; k++){
+                if(ud.CLIPPING[k].RECIPE_ID == req.body.RECIPE_ID){
+                    flag = 1;
+                    break;
+                }
+            }
+            if(flag == 1){
+                res.status(200).end("exist");
+                return;
+            }
             var i;
             var tempArr = new Array;
             for(i = 0; i < ud.CLIPPING.length; i++){
