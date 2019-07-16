@@ -202,6 +202,21 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
          return 0 == type.indexOf('application/json');
     }
 
+    app.post('/GetRecentSearch' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
+            if(err) return res.status(500).json({ error: "get clipping fail" });
+           
+	        if(ud.RECENTSEARCH.length == 0)
+		        res.status(200).end("");
+            
+            res.json(ud.RECENTSEARCH);
+        });
+    });
+
     app.post('/AddResentSearch' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
