@@ -209,7 +209,6 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }
         UserData.DBname.findOne({ID: req.body.ID}, function(err,ud){
             if(err) return res.status(500).json({ error: "add clipping fail" });
-
             var i;
             var tempArr = new Array;
             for(i = 0; i < ud.CLIPPING.length; i++){
@@ -220,8 +219,13 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             var tempObj = new Object();
             tempObj.RECIPE_ID = req.body.RECIPE_ID;
             tempArr.push(tempObj);
-            ud.CLIPPING = tempArr;
-        })
+
+            UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{CLIPPING:tempArr}}, function(err1, reply){
+                if(err1) return res.status(500).json({ error: "add clipping fail" });
+
+                console.log(reply);
+            })
+        });
     })
 
     app.post('/UnlinkUser', function(req, res){
