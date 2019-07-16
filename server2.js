@@ -439,10 +439,6 @@ function MakeDBForRecipeBasics(){
 		console.log('RecipeBasic i_0 : ' + RecipeBasics.getStartIdx());
 		console.log('RecipeBasic totalouCnt : ' + RecipeBasics.getTotalCount());
 		console.log('RecipeBasic length : ' + length);
-		var tempObj = new Object();
-		tempObj.WRITER = "";
-		tempObj.COMM = "";
-		tempObj.TIME = "";
 		var tempArr = new Array();
 		tempArr.push(tempObj);
 		for(RecipeBasics.setJ(0); RecipeBasics.getJ() < length; RecipeBasics.setJ(RecipeBasics.getJ() + 1)){

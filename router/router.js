@@ -44,6 +44,16 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         }).sort({AVGPRICE : -1});
     });
 
+    app.get('/GetComment/:RECIPE_ID',function(req,res){
+        RecipeBasics.DBname.findOne({RECIPE_ID: req.params.RECIPE_ID}, function(err, rb){
+            if(err){
+                console.error(err);
+                return;
+            }
+            res.json(rb.COMMENT);
+        });
+    });
+
     app.get('/FullRecipe',function(req,res){
         RecipeBasics.DBname.find({}, function(err, rb){
             if(err){
@@ -215,6 +225,40 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             
             res.json(ud.RECENTSEARCH);
         });
+    });
+
+
+    app.post('/AddComment' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        RecipeBasics.DBname.findOne({RECIPE_ID: req.body.RECIPE_ID}, function(err, rb){
+            if(err) return res.status(500).json({ error: "add comment fail" });
+           
+            var i;
+            var tempArr = new Array;
+            for(i = 0; i < rb.COMMENT.length; i++){
+                var tempObj = new Object();
+                tempObj.WRITER = rb.COMMENT[i].WRITER;
+                tempObj.TIME = rb.COMMENT[i].TIME;
+                tempObj.COMM = rb.COMMENT[i].COMM;
+                tempObj.PROFILE_IMG = rb.COMMENT[i].PROFILE_IMG;
+                tempArr.push(tempObj);
+            }
+            var tempObj = new Object();
+            tempObj.WRITER = req.body.WRITER;
+            tempObj.TIME = req.body.TIME;
+            tempObj.COMM = req.body.COMM;
+            tempObj.PROFILE_IMG = req.body.PROFILE_IMG;
+            tempArr.push(tempObj);
+
+            RecipeBasics.DBname.findOneAndUpdate({RECIPE_ID: req.body.RECIPE_ID}, {$set:{COMMENT:tempArr}}, function(err1, reply){
+                if(err1) return res.status(500).json({ error: "add comment fail" });
+
+                res.status(200).end('add complete');
+            })
+        })
     });
 
     app.post('/AddResentSearch' ,function(req, res){
