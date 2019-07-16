@@ -273,7 +273,7 @@ function MakeTodaySpecialPrice(){
 				console.log(err); 
 				return;
 			}
-			if(pi.length < 5000){
+			if(pi.length < 1000){
 				console.log("low data. skip");
 				return;
 			}

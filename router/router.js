@@ -202,28 +202,30 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
          return 0 == type.indexOf('application/json');
     }
 
-    app.post('/GetClipping') ,function(req, res){
+    app.post('/GetClipping' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
 		    return;
         }
         var rbfind = new Array();
-        UserData.DBname.find({ID : req.DBname.ID}, function(err, ud){
+        UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
             if(err) return res.status(500).json({ error: "get clipping fail" });
-            
+           
             var i;
-            for(i = 0; i < ud.length; i++){
+	    if(ud.CLIPPING.length == 0)
+		res.status(200).end("");
+            for(i = 0; i < ud.CLIPPING.length; i++){
                 RecipeBasics.DBname.findOne({RECIPE_ID: ud.CLIPPING[i].RECIPE_ID}, function(err, rb){
                     if(err) return res.status(500).json({ error: "get clipping fail" });
-
+		    console.log('rb: ' + rb);
                     rbfind.push(rb);
-                    if(rbfind.length == ud.length){
+                    if(rbfind.length == ud.CLIPPING.length){
                         res.json(rbfind);
                     }
-                })
+                });
             }
         });
-    }
+    });
 
     app.post('/AddClipping', function(req, res){
         if(!isFormData(req)){
@@ -246,7 +248,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{CLIPPING:tempArr}}, function(err1, reply){
                 if(err1) return res.status(500).json({ error: "add clipping fail" });
 
-                console.log(reply);
+                res.status(200).end('add complete');
             })
         });
     })
