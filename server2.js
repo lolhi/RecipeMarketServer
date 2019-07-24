@@ -1,4 +1,4 @@
- var express = require('express');
+var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var request = require('request');
@@ -75,10 +75,6 @@ app.use(bodyParser.urlencoded({
 //var server = app.listen(8080, function(){
 // console.log("Express server has started on port 8080");
 //});
-
-app.get('/', function (req, res) {
-	res.end('hello world?');
-});
 
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
@@ -440,7 +436,6 @@ function MakeDBForRecipeBasics(){
 		console.log('RecipeBasic totalouCnt : ' + RecipeBasics.getTotalCount());
 		console.log('RecipeBasic length : ' + length);
 		var tempArr = new Array();
-		tempArr.push(tempObj);
 		for(RecipeBasics.setJ(0); RecipeBasics.getJ() < length; RecipeBasics.setJ(RecipeBasics.getJ() + 1)){
 			var newRecipeBasic = new RecipeBasics.DBname({
 				RECIPE_ID:      jsondata[RecipeBasics.getJ()].RECIPE_ID,        // 레시피 아이디
