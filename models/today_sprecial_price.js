@@ -4,8 +4,10 @@ var Schema = mongoose.Schema;
 var TodaySpecialPriceSchema = new Schema({
     PRDLST_NAME: String,
     SPCIES_NAME: String,
-    SPCIES_CODE: String,
-    AVGPRICE: Number
+    CommonYearReduction: Number,
+    YearReduction: Number,
+    YesterdayCommonYearReduction: Number,
+    YesterdayYearReduction: Number
 });
 
 module.exports = mongoose.model('todayspecialpriceamtion', TodaySpecialPriceSchema);

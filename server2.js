@@ -105,297 +105,113 @@ var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, Recip
 
 var ServiceKey = config.ServiceKey;
 
-// MakeDBForPriceInfo
-var currDay = 1;
-var currYear = 2014;
-var endYear = 2019;
-var predMonth;
-
 //MakeDBForPriceInfo();
 //setInterval(MakeDBForPriceInfo, 2629800000);
 
 // Get today priceinfomation
-var yesterday = '20190713';
-var jsonStr = new Array();
-var temp = new Array();
+var category_code = 100;
+TodaySpecialPrice.DBname.remove(function(err, output){
+	if(err) {
+		console.log('error: database remove failure'); 
+		return;
+	}
+	console.log('db remove success');
+	GetTodayPriceInfo();
+});
 
-GetTodayPriceInfo();
 //setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
 //MakeDBForRecipeBasics();
-//MakeDBForRecipeBasics();
 
 function GetTodayPriceInfo(){
-	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ TodayPriceInfo.getStartIdx() + '/' + TodayPriceInfo.getEndIdx() + '/';
+	var jsonStr = new Array();
+	if(category_code == 500)
+		return;
+
+	var url = 'http://www.kamis.or.kr/service/price/xml.do';
 
 	var week = new Array('Sun', 'Mon', 'Tue', 'Wen', 'Thr', 'Fri', 'Sat');
 	var tempdate = new Date();
-	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
+	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 1);
 	var tempweek = week[date.getDay()];
 	if(tempweek == 'Sun')
-		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 4);
-	var today = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
-	+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
+		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
+	else if(tempweek == 'Sat')
+		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 2);
+	var today = String(date.getFullYear()) +'-' + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
+	+ '-' + (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
 
 	request({
         url: url,
 		method: 'GET',
 		qs:{
-			AUCNG_DE: today
+			action: "dailyPriceByCategoryList",
+			p_cert_key: ServiceKey,
+			p_cert_id: "lolhi",
+			p_returntype: "json",
+			p_product_cls_code: "02",
+			p_item_category_code: category_code,
+			p_regday: today,
+			p_convert_kg_yn: "N"
 		}
     }, function (error, response, body) {
 		if(error){
-			console.log('GetTodayPriceInfo request module error : ' + err);
+			console.log('GetTodayPriceInfo request module error : ' + error);
 			return;
 		}
-
-		if(yesterday == today)
-			return;
 		
 		var jsondata = JSON.parse(body);
 
-		if(TodayPriceInfo.getTotalCount() == -1002 ){
-			jsonStr = new Array();
-			TodayPriceInfo.setTotalCount(jsondata.Grid_20141119000000000012_1.totalCnt);  	
-		}
-
-		jsondata = jsondata.Grid_20141119000000000012_1.row;
+		jsondata = jsondata.data.item;
 		var length = Object.keys(jsondata).length;
 
-		console.log('TodayPriceInfo i_0 : ' + TodayPriceInfo.getStartIdx());
-		console.log('TodayPriceInfo totalouCnt : ' +TodayPriceInfo.getTotalCount());
-		console.log('TodayPriceInfo length : ' + length);
+		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
+			if(jsondata[TodayPriceInfo.getJ()].dpr1 == '-' || jsondata[TodayPriceInfo.getJ()].dpr2 == '-' || jsondata[TodayPriceInfo.getJ()].dpr6 == '-' || jsondata[TodayPriceInfo.getJ()].dpr7 == '-')
+				continue;
+			jsondata[TodayPriceInfo.getJ()].CommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100
+			jsondata[TodayPriceInfo.getJ()].YearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100
+			jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100
+			jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100
 
-		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1))
-			temp.push(jsondata[TodayPriceInfo.getJ()]);
-
-		TodayPriceInfo.setTotalCount(TodayPriceInfo.getTotalCount() - 1000);
-		TodayPriceInfo.setStartIdx(TodayPriceInfo.getStartIdx() + 1000);
-		TodayPriceInfo.setEndIdx(TodayPriceInfo.getEndIdx() + 1000);
-		TodayPriceInfo.setDebugSum(length);
-
-		if(TodayPriceInfo.getTotalCount() <= 0){
-			console.log('-------------------TodayPriceInfo SUM : ' + TodayPriceInfo.getDebugSum());
-			
-			var r,c;
-			
-			for(r = 0; r < temp.length - 2; r++){
-				var temp2 = new Array();
-				var k;
-				var flag1 = 0
-				for(k = 0; k < jsonStr.length; k++){
-					if(jsonStr[k].PRDLST_NM == temp[r].PRDLST_NM && jsonStr[k].SPCIES_NM == temp[r].SPCIES_NM){
-						flag1 = 1;
-						break;
+			var i;
+			for(i = 0; i < jsonStr.length; i++){
+				if(jsondata[TodayPriceInfo.getJ()].item_name == jsonStr[i].item_name && jsondata[TodayPriceInfo.getJ()].kind_name == jsonStr[i].kind_name){
+					if(jsondata[TodayPriceInfo.getJ()].rank == '중품'){
+						jsonStr.splice(i, 1);
+						jsonStr.push(jsondata[TodayPriceInfo.getJ()]);
 					}
-				}
-				if(flag1 == 1)
-						continue;
-				temp2.push(temp[r]);
-				for(c = r + 1; c < temp.length; c++){
-					if(temp[r].PRDLST_NM == temp[c].PRDLST_NM && temp[r].SPCIES_NM == temp[c].SPCIES_NM){
-						temp2.push(temp[c]);
-					}
-				}
-
-				temp2.sort(function (a, b) { 
-					return a.DELNGBUNDLE_QY < b.DELNGBUNDLE_QY ? -1 : a.DELNGBUNDLE_QY > b.DELNGBUNDLE_QY ? 1 : 0;  
-				});
-				var median = parseInt(temp2.length/2)
-				var cnt = 0;
-				var sum = 0;
-				var avg = 0;
-
-				var idx;
-				for(idx = 0; idx < temp2.length; idx++){
-					if(temp2[median].DELNGBUNDLE_QY == temp2[idx].DELNGBUNDLE_QY){
-						sum += temp2[idx].AVRG_AMT / (temp2[idx].DELNGBUNDLE_QY * 10);
-						cnt++;
-					}
-				}
-				avg = sum / cnt;
-				temp2[median].AVRG_AMT = avg;
-				var obj = new Object();
-				obj.PRDLST_NM = temp2[median].PRDLST_NM;
-				obj.SPCIES_NM = temp2[median].SPCIES_NM;
-				obj.SPCIES_CD = temp2[median].SPCIES_CD;
-				obj.WEIGHT_VAL = temp2[median].DELNGBUNDLE_QY;
-				obj.AVGPRICE = avg;
-
-				jsonStr.push(obj);
-			}
-			TodayPriceInfo.setTotalCount(-1002);
-			TodayPriceInfo.setStartIdx(1);
-			TodayPriceInfo.setEndIdx(1000);
-			yesterday = today;
-			MakeTodaySpecialPrice();
-			return;
-		}	
-		GetTodayPriceInfo();
-	});
-}
-
-function MakeTodaySpecialPrice(){
-	console.log('db save start!');
-	//디비 지우기
-	TodaySpecialPrice.DBname.remove({}, function(err, output){
-		if(err) console.log('error: database remove failure'); return;
-
-			/* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
-			if(!output.result.n) return res.status(404).json({ error: "book not found" });
-			res.json({ message: "book deleted" });
-			*/
-
-			console.log('db remove success');
-	});
-	var i;
-	for(i = 0; i < jsonStr.length; i++){
-		var searchPrdlstName = jsonStr[i].PRDLST_NM;
-		var searchSpcieName = jsonStr[i].SPCIES_NM;
-		var searchWeight = jsonStr[i].WEIGHT_VAL;
-		PriceInfo.DBname.find({
-			PRDLST_NAME: searchPrdlstName,
-			SPCIES_NAME: searchSpcieName,
-			WEIGHT_VAL: searchWeight
-		}, function(err, pi){
-			if(err){
-				console.log(err); 
-				return;
-			}
-			if(pi.length < 1000){
-				console.log("low data. skip");
-				return;
-			}
-			if(pi.length != 0){
-				var median = parseInt(pi.length / 2);
-				var cnt = 0;
-				var sum = 0;
-				var avg = 0;
-
-				for(TodaySpecialPrice.setJ(0); TodaySpecialPrice.getJ() < pi.length; TodaySpecialPrice.setJ(TodaySpecialPrice.getJ() + 1)){
-					sum += pi[TodaySpecialPrice.getJ()].AVGPRICE / (pi[TodaySpecialPrice.getJ()].WEIGHT_VAL * 10);
-					cnt++;
-				}
-				avg = sum / cnt;
-				
-				var r;
-				for(r = 0; r < jsonStr.length; r++){
-					if(jsonStr[r].PRDLST_NM == pi[median].PRDLST_NAME && jsonStr[r].SPCIES_NM == pi[median].SPCIES_NAME){
-						if(avg -  jsonStr[r].AVGPRICE > 0){
-							var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
-								PRDLST_NAME: jsonStr[r].PRDLST_NM,
-								SPCIES_NAME: jsonStr[r].SPCIES_NM,
-								SPCIES_CODE: jsonStr[r].SPCIES_CD,
-								AVGPRICE: avg -  jsonStr[r].AVGPRICE
-							});
-					
-							newTodaySpecialPrice.save(function(err){
-								if(err){
-									console.error(err);
-									return;
-								}
-								//console.log('db save success');
-							});
-						}
-						break;
-					}
+					break;
 				}
 			}
-		});
-	}
-}
-
-function MakeDBForPriceInfo(){
-	var tempdate = new Date();
-	var Today = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
-	predMonth = Today.getMonth()+1;
-	let date = new Date(currYear,Today.getMonth(),currDay);
-	var url = 'http://211.237.50.150:7080/openapi/' + ServiceKey + '/json/Grid_20141119000000000012_1/'+ PriceInfo.getStartIdx() + '/' + PriceInfo.getEndIdx() + '/';
-	var startday = String(date.getFullYear()) + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
-					+ (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
-
-	if(date.getMonth() + 1 != predMonth){
-		currDay = 1;
-		currYear++;
-		MakeDBForPriceInfo();
-	}
-
-	if(endYear == date.getFullYear()){
-		console.log('make PriceInfodb finish.');
-		return;
-	}
-
-    request({
-        url: url,
-		method: 'GET',
-		qs:{
-			AUCNG_DE: startday
+			if((i == jsonStr.length || jsonStr.length == 0) && jsondata[TodayPriceInfo.getJ()].rank == '중품')
+				jsonStr.push(jsondata[TodayPriceInfo.getJ()]);
 		}
-    }, function (error, response, body) {
-		var jsondata = JSON.parse(body);
-
-		if(PriceInfo.getTotalCount() == -1001 || PriceInfo.getTotalCount() == -1002 ){
-			if(PriceInfo.getTotalCount() == -1002 ){
-				PriceInfo.DBname.remove({}, function(err, output){
-					if(err) {
-						console.log('error: database remove failure'); 
+		
+		var j;
+		for(j = 0; j < jsonStr.length; j++){
+			if(jsonStr[j].CommonYearReduction > 1 && jsonStr[j].YearReduction > 1 && jsonStr[j].YesterdayCommonYearReduction > 1 && jsonStr[j].YesterdayYearReduction > 1){
+				var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
+					PRDLST_NAME: jsonStr[j].item_name,
+					SPCIES_NAME: jsonStr[j].kind_name,
+					CommonYearReduction: jsonStr[j].CommonYearReduction,
+					YearReduction: jsonStr[j].YearReduction,
+					YesterdayCommonYearReduction: jsonStr[j].YesterdayCommonYearReduction,
+					YesterdayYearReduction: jsonStr[j].YesterdayYearReduction
+				});
+		
+				newTodaySpecialPrice.save(function(err){
+					if(err){
+						console.error(err);
 						return;
 					}
-			
-					/* ( SINCE DELETE OPERATION IS IDEMPOTENT, NO NEED TO SPECIFY )
-					if(!output.result.n) return res.status(404).json({ error: "book not found" });
-					res.json({ message: "book deleted" });
-					*/
-			
-					console.log('db remove success');
+					//console.log('db save success');
 				});
 			}
-			PriceInfo.setTotalCount(jsondata.Grid_20141119000000000012_1.totalCnt);  	
 		}
-
-		jsondata = jsondata.Grid_20141119000000000012_1.row;
-		var length = Object.keys(jsondata).length;
-
-		console.log('PriceInfo i_0 : ' + PriceInfo.getStartIdx());
-		console.log('PriceInfo totalouCnt : ' +PriceInfo.getTotalCount());
-		console.log('PriceInfo length : ' + length);
-		for(PriceInfo.setJ(0); PriceInfo.getJ() < length; PriceInfo.setJ(PriceInfo.getJ() + 1)){
-			var newPriceInfo = new PriceInfo.DBname({
-				DATE: jsondata[PriceInfo.getJ()].AUCNG_DE,
-				PRDLST_NAME: jsondata[PriceInfo.getJ()].PRDLST_NM,
-				SPCIES_NAME: jsondata[PriceInfo.getJ()].SPCIES_NM,
-				SPCIES_CODE: jsondata[PriceInfo.getJ()].SPCIES_CD,
-				WEIGHT_VAL: jsondata[PriceInfo.getJ()].DELNGBUNDLE_QY,
-				WEIGHT_UNIT: jsondata[PriceInfo.getJ()].STNDRD,
-				AVGPRICE: jsondata[PriceInfo.getJ()].AVRG_AMT
-			});
-
-			newPriceInfo.save(function(err){
-				if(err){
-					console.error(err);
-					return;
-				}
-				//console.log('db save success');
-			});
-		}
-		PriceInfo.setTotalCount(PriceInfo.getTotalCount() - 1000);
-		PriceInfo.setStartIdx(PriceInfo.getStartIdx() + 1000);
-		PriceInfo.setEndIdx(PriceInfo.getEndIdx() + 1000);
-		PriceInfo.setDebugSum(length);
-
-		if(PriceInfo.getTotalCount() <= 0){
-			console.log('-------------------PriceInfo SUM : ' + PriceInfo.getDebugSum());
-			
-			console.log('---------end Date : ' + startday + '--------');
-			
-			PriceInfo.setTotalCount(-1001);
-			PriceInfo.setStartIdx(1);
-			PriceInfo.setEndIdx(1000);
-			currDay += 1;
-		}	
-		MakeDBForPriceInfo();
+		category_code += 100;
+		GetTodayPriceInfo();
 	});
 }
 
@@ -595,5 +411,3 @@ function MakeDBForRecipeProcess(){
 		MakeDBForRecipeProcess();
 	});
 }
-
-
