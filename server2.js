@@ -79,17 +79,12 @@ app.use(bodyParser.urlencoded({
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
 	configDir: '~/let',
+	store: require('greenlock-store-fs'),
 	server: 'https://acme-v02.api.letsencrypt.org/directory',  
  	//server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
-  	approveDomains: (opts, certs, cb) => {
-    	if (certs) {
-     		opts.domains = [config.domain];
-    	} else {
-     		opts.email = config.email;
-     		opts.agreeTos = true;
-    	}
-   	cb(null, { options: opts, certs });
-  	},
+  	approveDomains: config.domain,
+	email: config.email,
+	agreeTos: true,
   	renewWithin: 81 * 24 * 60 * 60 * 1000,
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
@@ -124,7 +119,7 @@ var yesterday = '20190713';
 var jsonStr = new Array();
 var temp = new Array();
 
-//GetTodayPriceInfo();
+GetTodayPriceInfo();
 //setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
