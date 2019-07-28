@@ -48,19 +48,6 @@ db.once('open', function(){
 			}
 			//console.log('db save success');
 		});
-		newNotice = new Notice.DBname({
-			NOTICE_TITLE: noticeconfig.NOTICE_TITLE2,
-			NOTICE_IMG: noticeconfig.NOTICE_IMG2,
-			NOTICE_WRITER: noticeconfig.NOTICE_WRITER,
-			NOTICE_CONTENTS: noticeconfig.NOTICE_CONTENTS2
-		});
-		newNotice.save(function(err){
-			if(err){
-				console.error(err);
-				return;
-			}
-			//console.log('db save success');
-		});
 	});	
 });
 
