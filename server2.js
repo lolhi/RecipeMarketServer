@@ -72,10 +72,10 @@ app.use(bodyParser.urlencoded({
    extended: true
 }));
 
-//var server = app.listen(8080, function(){
-// console.log("Express server has started on port 8080");
-//});
-
+var server = app.listen(8080, function(){
+ console.log("Express server has started on port 8080");
+});
+/*
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
 	configDir: '~/let',
@@ -89,7 +89,7 @@ require('greenlock-express').create({
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 }).listen(80, 443);
-
+*/
 
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
@@ -175,7 +175,16 @@ function GetTodayPriceInfo(){
 			jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100
 			jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100
 
+			if(jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 5)
+				jsondata[TodayPriceInfo.getJ()].Severity = 1;
+			else if (jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 3)
+				jsondata[TodayPriceInfo.getJ()].Severity = 2;
+			else if (jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 1)
+				jsondata[TodayPriceInfo.getJ()].Severity = 3;
+			else
+				jsondata[TodayPriceInfo.getJ()].Severity = 4;
 			var i;
+
 			for(i = 0; i < jsonStr.length; i++){
 				if(jsondata[TodayPriceInfo.getJ()].item_name == jsonStr[i].item_name && jsondata[TodayPriceInfo.getJ()].kind_name == jsonStr[i].kind_name){
 					if(jsondata[TodayPriceInfo.getJ()].rank == '중품'){
@@ -198,7 +207,8 @@ function GetTodayPriceInfo(){
 					CommonYearReduction: jsonStr[j].CommonYearReduction,
 					YearReduction: jsonStr[j].YearReduction,
 					YesterdayCommonYearReduction: jsonStr[j].YesterdayCommonYearReduction,
-					YesterdayYearReduction: jsonStr[j].YesterdayYearReduction
+					YesterdayYearReduction: jsonStr[j].YesterdayYearReduction,
+					Severity : jsonStr[j].Severity
 				});
 		
 				newTodaySpecialPrice.save(function(err){

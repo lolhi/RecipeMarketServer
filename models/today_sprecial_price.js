@@ -7,7 +7,8 @@ var TodaySpecialPriceSchema = new Schema({
     CommonYearReduction: Number,
     YearReduction: Number,
     YesterdayCommonYearReduction: Number,
-    YesterdayYearReduction: Number
+    YesterdayYearReduction: Number,
+    Severity: Number
 });
 
 module.exports = mongoose.model('todayspecialpriceamtion', TodaySpecialPriceSchema);

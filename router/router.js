@@ -1,8 +1,5 @@
 module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData){
-    var respond;
-    var respond2;
     var searchres;
-    var call = 0;
 
     app.get('/PrivacyPolicy',function(req,res){
         res.sendfile('/PrivacyPolicy.html', {root: __dirname});
@@ -33,16 +30,83 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     });
 
     app.get('/TodaySpecialPrice',function(req,res){
+        var call = 0;
+        var respond = new Array();
         TodaySpecialPrice.DBname.find({}, function(err, tpi){
             if(err){
                 console.error(err);
                 return;
             }
-            respond = new Array();
-            respond2 = new Array();
-            FindMaterial(tpi, res);
-        }).sort({AVGPRICE : -1});
+            var i = 0;
+            FindMaterial(tpi, res, i, call, respond)
+        }).sort({Severity: 1, CommonYearReduction: -1});
     });
+
+    async function FindMaterial(tpi, res, i, call, respond){
+        await FindMaterialPromise(tpi[i])
+            .then(function(rb){
+                //성공
+                var j;
+                for(j = 0; j < respond.length; j++){
+                    if(respond[j].RECIPE_NM_KO == rb.RECIPE_NM_KO){
+                        // 중복레시피 발견시 pass
+                        i++;
+                        FindMaterial(tpi,res, i, call, respond);
+                        return;
+                    }
+                }
+                respond.push(rb);
+                call++;
+                if(respond.length == 6 || call == tpi.length){
+                    res.json(respond);
+                    return;
+                }
+                i++;
+                FindMaterial(tpi, res, i, call, respond);
+            }, function(errorlog){
+                //실패
+                console.log(errorlog);
+                if(respond.length == 6 || call == tpi.length){
+                    res.json(respond);
+                    return;
+                }
+                i++;
+                FindMaterial(tpi, res, i, call, respond);
+            });
+    }
+
+    var FindMaterialPromise =  function(tpiItem){
+        return new Promise(function(resolve, reject){
+            RecipeMaterial.DBname.findOne({IRDNT_NM: tpiItem.PRDLST_NAME}, function(err,rm){
+                if(err){
+                    console.error(err);
+                    return;
+                }
+                
+                if(rm == null){
+                    reject("RecipeMaterial not found : " + tpiItem.PRDLST_NAME);
+                    return;
+                }
+
+                // 재료 단위 통일시 정렬 후 가장 많이 쓰이는 걸로 검색할것
+
+                RecipeBasics.DBname.findOne({RECIPE_ID: rm.RECIPE_ID}, function(err,rb){
+                    if(err){
+                        console.error(err);
+                        return;
+                    }
+
+                    if(rb == null){
+                        reject("RecipeBasic not found");
+                        return;
+                    }
+
+                    resolve(rb);
+                });
+                
+            });
+        });
+    }
 
     app.get('/GetComment/:RECIPE_ID',function(req,res){
         RecipeBasics.DBname.findOne({RECIPE_ID: req.params.RECIPE_ID}, function(err, rb){
@@ -417,61 +481,5 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             }
         });
     });
-
-    function FindMaterial(tpi, res){
-        var i;
-        for(i = 0; i < tpi.length; i++){
-            RecipeMaterial.DBname.findOne({IRDNT_NM: tpi[i].PRDLST_NAME}, function(err,rm){
-                if(err){
-                    console.error(err);
-                    return;
-                }
-                call++;
-                if(rm != null){ 
-                    var r;
-                    var flag = 0;
-                    for(r = 0; r < respond.length; r++) {
-                        if(respond[r].RECIPE_ID == rm.RECIPE_ID) {
-                            flag = 1;
-                            break;
-                        }
-                    }
-                    if(respond.length == 0 || flag == 0){
-                        respond.push(rm);
-                    }
-                }
-                if(respond.length == 20){
-                    var k;
-                    for(k = 0; k < respond.length; k++){
-                        RecipeBasics.DBname.findOne({RECIPE_ID: respond[k].RECIPE_ID},function(err,rb){
-                            if(err){
-                                console.error(err);
-                                return;
-                            }
-                            var d;
-                            var flag1 = 0;
-			    if(rb != null){
-                            for(d = 0; d < respond2.length; d++) {
-                                if(respond2[d].RECIPE_ID == rb.RECIPE_ID) {
-                                    flag1 = 1;
-                                    break;
-                                }
-                            }
-                            if(respond2.length == 0 || flag1 == 0){
-                                respond2.push(rb);
-                            }
-
-                            if(respond2.length == 10){
-                                res.json(respond2);
-                                respond2.push(rb);
-                            }
-			    }	
-                        });
-                    }
-                    return;
-                }
-            }).limit(1);
-        }
-    }
 }
 
