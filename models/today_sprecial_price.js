@@ -6,8 +6,6 @@ var TodaySpecialPriceSchema = new Schema({
     SPCIES_NAME: String,
     CommonYearReduction: Number,
     YearReduction: Number,
-    YesterdayCommonYearReduction: Number,
-    YesterdayYearReduction: Number,
     Severity: Number
 });
 

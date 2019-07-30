@@ -77,7 +77,6 @@ require('greenlock-express').create({
 	app: app
 }).listen(80, 443);
 */
-
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
 var RecipeBasics = new DBClass(require('./models/recipe_basic'));
@@ -96,7 +95,6 @@ var ServiceKey = config.ServiceKey;
 //setInterval(MakeDBForPriceInfo, 2629800000);
 
 // Get today priceinfomation
-var category_code = 100;
 TodaySpecialPrice.DBname.remove(function(err, output){
 	if(err) {
 		console.log('error: database remove failure'); 
@@ -113,102 +111,218 @@ TodaySpecialPrice.DBname.remove(function(err, output){
 //MakeDBForRecipeBasics();
 
 function GetTodayPriceInfo(){
-	var jsonStr = new Array();
-	if(category_code == 500)
-		return;
-
-	var url = 'http://www.kamis.or.kr/service/price/xml.do';
-
-	var week = new Array('Sun', 'Mon', 'Tue', 'Wen', 'Thr', 'Fri', 'Sat');
 	var tempdate = new Date();
 	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 1);
-	var tempweek = week[date.getDay()];
-	if(tempweek == 'Sun')
-		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 3);
-	else if(tempweek == 'Sat')
-		date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 2);
-	var today = String(date.getFullYear()) +'-' + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
-	+ '-' + (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
+	var category_code = 100;
+	var diff = 0;
 
-	request({
-        url: url,
-		method: 'GET',
-		qs:{
-			action: "dailyPriceByCategoryList",
-			p_cert_key: ServiceKey,
-			p_cert_id: "lolhi",
-			p_returntype: "json",
-			p_product_cls_code: "02",
-			p_item_category_code: category_code,
-			p_regday: today,
-			p_convert_kg_yn: "N"
+	RequestaFewDaysAgo(date, category_code, new Array(), new Array(), diff)
+		.then(function(jsonStr){
+			//성공
+			var j;
+			for(j = 0; j < jsonStr.length; j++){
+				if(jsonStr[j] == "0"){
+					var k;
+					if(j != jsonStr.length - 1)
+						k = j + 1
+					else
+						k = j;
+					for(k; k < jsonStr.length; k++){
+						if(jsonStr[k] == "0")
+							continue;
+						jsonStr[j] = jsonStr[k];
+						break;
+					}
+				}
+			}
+			// for문 돌려서 length 체크, 다르면 큰 배열에서 작은배열 검색 후 없는거 삭제
+			var k;
+			for(k = 0; k < jsonStr[0].length; k++){
+				if(jsonStr[0][k].item_name == jsonStr[1][k].item_name && jsonStr[0][k].kind_name == jsonStr[1][k].kind_name &&
+					jsonStr[0][k].item_name == jsonStr[2][k].item_name && jsonStr[0][k].kind_name == jsonStr[2][k].kind_name &&
+					jsonStr[0][k].item_name == jsonStr[3][k].item_name && jsonStr[0][k].kind_name == jsonStr[3][k].kind_name &&
+					jsonStr[0][k].item_name == jsonStr[4][k].item_name && jsonStr[0][k].kind_name == jsonStr[4][k].kind_name){
+						// 우선순위 정해줄것
+						if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5 && 
+							jsonStr[1][k].CommonYearReduction > 5 && jsonStr[1][k].YearReduction > 5 &&
+							jsonStr[2][k].CommonYearReduction > 5 && jsonStr[2][k].YearReduction > 5 && 
+							jsonStr[3][k].CommonYearReduction > 5 && jsonStr[3][k].YearReduction > 5 &&
+							jsonStr[4][k].CommonYearReduction > 5 && jsonStr[4][k].YearReduction > 5){
+								jsonStr[0][k].Severity = 1;
+						}
+						else if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5 && 
+							jsonStr[1][k].CommonYearReduction > 5 && jsonStr[1][k].YearReduction > 5 &&
+							jsonStr[2][k].CommonYearReduction > 5 && jsonStr[2][k].YearReduction > 5 && 
+							jsonStr[3][k].CommonYearReduction > 5 && jsonStr[3][k].YearReduction > 5){
+								jsonStr[0][k].Severity = 2;
+						}
+						else if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5 && 
+							jsonStr[1][k].CommonYearReduction > 5 && jsonStr[1][k].YearReduction > 5 &&
+							jsonStr[2][k].CommonYearReduction > 5 && jsonStr[2][k].YearReduction > 5){
+								jsonStr[0][k].Severity = 3;
+						}  
+						else if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5 && 
+							jsonStr[1][k].CommonYearReduction > 5 && jsonStr[1][k].YearReduction > 5){
+								jsonStr[0][k].Severity = 4;
+						}
+						else if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5){
+								jsonStr[0][k].Severity = 5;
+						}
+						else{
+							jsonStr[0][k].Severity = 6;
+						}
+						var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
+							PRDLST_NAME: jsonStr[0][k].item_name,
+							SPCIES_NAME: jsonStr[0][k].kind_name,
+							CommonYearReduction: jsonStr[0][k].CommonYearReduction,
+							YearReduction: jsonStr[0][k].YearReduction,
+							Severity : jsonStr[0][k].Severity
+						});
+				
+						newTodaySpecialPrice.save(function(err){
+							if(err){
+								console.error(err);
+								return;
+							}
+							//console.log('db save success');
+						});
+				}
+				else{
+					//이름이 다를때
+					var k1;
+					var minIdx = 0;
+					for(k1 = 1; k1 < jsonStr.length; k1++){
+						if(jsonStr[minIdx].length > jsonStr[k1].length){
+							minIdx = k1;
+						}
+					}
+					
+					// minIdx보다 길면 k번째 아이템 삭제
+					for(k1 = 0; k1 < jsonStr.length; k1++){
+						if(k1 == minIdx)
+							continue;
+						if(jsonStr[k1].length > jsonStr[minIdx].length){
+							var diff = jsonStr[k1].length - jsonStr[minIdx].length;
+							jsonStr[k1].splice(k, diff);
+						}
+					}
+					k--;
+				}
+			}
+		}, function(){
+			//실패
+		});
+}
+
+var RequestaFewDaysAgo = async function(date, category_code, jsonStr, tempArr, diff){
+	return new Promise(async function(resolve, reject){
+		var newDate = date;
+		await RequestaFewDaysAgoPromise(date, category_code, tempArr)
+			.then(function(tempArr2){
+				//성공
+				if(category_code != 400)
+					category_code += 100;
+				else{
+					jsonStr.push(tempArr);
+					tempArr = new Array();
+					category_code = 100;
+					diff++;
+					newDate = new Date(date.getFullYear(),date.getMonth(), date.getDate() - 1);
+				}
+				if(diff == 5){
+					resolve(jsonStr);
+					return;
+				}
+				RequestaFewDaysAgo(newDate,category_code, jsonStr, tempArr, diff)
+					.then(function(jsonStr){
+						resolve(jsonStr);
+					}, function(){
+						//실패
+					});
+				return;
+			}, function(errorlog){
+				//실패
+				jsonStr.push(errorlog);
+				diff++;
+				newDate = new Date(date.getFullYear(),date.getMonth(), date.getDate() - 1);
+				if(diff == 5){
+					resolve(jsonStr);
+					return;
+				}
+				RequestaFewDaysAgo(newDate,category_code, jsonStr, tempArr, diff)
+					.then(function(jsonStr){
+						resolve(jsonStr);
+					}, function(){
+						//실패
+					});
+				return;
+			});
+	});
+}
+
+var RequestaFewDaysAgoPromise =  function(date, category_code, tempArr){
+	return new Promise(function(resolve, reject){
+		var week = new Array('Sun', 'Mon', 'Tue', 'Wen', 'Thr', 'Fri', 'Sat');
+		var tempweek = week[date.getDay()];
+		if(tempweek == 'Sun'){
+			reject(0);
+			return;
 		}
-    }, function (error, response, body) {
-		if(error){
-			console.log('GetTodayPriceInfo request module error : ' + error);
+		else if(tempweek == 'Sat'){
+			reject(0);
 			return;
 		}
 		
-		var jsondata = JSON.parse(body);
-
-		jsondata = jsondata.data.item;
-		var length = Object.keys(jsondata).length;
-
-		for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
-			if(jsondata[TodayPriceInfo.getJ()].dpr1 == '-' || jsondata[TodayPriceInfo.getJ()].dpr2 == '-' || jsondata[TodayPriceInfo.getJ()].dpr6 == '-' || jsondata[TodayPriceInfo.getJ()].dpr7 == '-')
-				continue;
-			jsondata[TodayPriceInfo.getJ()].CommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100
-			jsondata[TodayPriceInfo.getJ()].YearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100
-			jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100
-			jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr2.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100
-
-			if(jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 5 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 5)
-				jsondata[TodayPriceInfo.getJ()].Severity = 1;
-			else if (jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 3 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 3)
-				jsondata[TodayPriceInfo.getJ()].Severity = 2;
-			else if (jsondata[TodayPriceInfo.getJ()].CommonYearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YesterdayCommonYearReduction > 1 && jsondata[TodayPriceInfo.getJ()].YesterdayYearReduction > 1)
-				jsondata[TodayPriceInfo.getJ()].Severity = 3;
-			else
-				jsondata[TodayPriceInfo.getJ()].Severity = 4;
-			var i;
-
-			for(i = 0; i < jsonStr.length; i++){
-				if(jsondata[TodayPriceInfo.getJ()].item_name == jsonStr[i].item_name && jsondata[TodayPriceInfo.getJ()].kind_name == jsonStr[i].kind_name){
-					if(jsondata[TodayPriceInfo.getJ()].rank == '중품'){
-						jsonStr.splice(i, 1);
-						jsonStr.push(jsondata[TodayPriceInfo.getJ()]);
+		var today = String(date.getFullYear()) +'-' + (date.getMonth() + 1 < 10 ? '0' + String(date.getMonth() + 1) : String(date.getMonth() + 1)) 
+			+ '-' + (date.getDate() < 10 ? '0' + String(date.getDate()) : String(date.getDate()));
+		var url = 'http://www.kamis.or.kr/service/price/xml.do';
+		request({
+			url: url,
+			method: 'GET',
+			qs:{
+				action: "dailyPriceByCategoryList",
+				p_cert_key: ServiceKey,
+				p_cert_id: "lolhi",
+				p_returntype: "json",
+				p_product_cls_code: "02",
+				p_item_category_code: category_code,
+				p_regday: today,
+				p_convert_kg_yn: "N"
+			}
+		}, function (error, response, body) {
+			if(error){
+				console.log('GetTodayPriceInfo request module error : ' + error);
+				return;
+			}
+			
+			var jsondata = JSON.parse(body);
+	
+			jsondata = jsondata.data.item;
+			var length = Object.keys(jsondata).length;
+	
+			for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
+				if(jsondata[TodayPriceInfo.getJ()].dpr1 == '-' || jsondata[TodayPriceInfo.getJ()].dpr6 == '-' || jsondata[TodayPriceInfo.getJ()].dpr7 == '-')
+					continue;
+				jsondata[TodayPriceInfo.getJ()].CommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100;
+				jsondata[TodayPriceInfo.getJ()].YearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100;
+	
+				var i;
+	
+				for(i = 0; i < tempArr.length; i++){
+					if(jsondata[TodayPriceInfo.getJ()].item_name == tempArr[i].item_name && jsondata[TodayPriceInfo.getJ()].kind_name == tempArr[i].kind_name){
+						if(jsondata[TodayPriceInfo.getJ()].rank == '중품'){
+							tempArr.splice(i, 1);
+							tempArr.push(jsondata[TodayPriceInfo.getJ()]);
+						}
+						break;
 					}
-					break;
 				}
+				if((i == tempArr.length || tempArr.length == 0) && jsondata[TodayPriceInfo.getJ()].rank == '중품')
+					tempArr.push(jsondata[TodayPriceInfo.getJ()]);
 			}
-			if((i == jsonStr.length || jsonStr.length == 0) && jsondata[TodayPriceInfo.getJ()].rank == '중품')
-				jsonStr.push(jsondata[TodayPriceInfo.getJ()]);
-		}
-		
-		var j;
-		for(j = 0; j < jsonStr.length; j++){
-			if(jsonStr[j].CommonYearReduction > 1 && jsonStr[j].YearReduction > 1 && jsonStr[j].YesterdayCommonYearReduction > 1 && jsonStr[j].YesterdayYearReduction > 1){
-				var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
-					PRDLST_NAME: jsonStr[j].item_name,
-					SPCIES_NAME: jsonStr[j].kind_name,
-					CommonYearReduction: jsonStr[j].CommonYearReduction,
-					YearReduction: jsonStr[j].YearReduction,
-					YesterdayCommonYearReduction: jsonStr[j].YesterdayCommonYearReduction,
-					YesterdayYearReduction: jsonStr[j].YesterdayYearReduction,
-					Severity : jsonStr[j].Severity
-				});
-		
-				newTodaySpecialPrice.save(function(err){
-					if(err){
-						console.error(err);
-						return;
-					}
-					//console.log('db save success');
-				});
-			}
-		}
-		category_code += 100;
-		GetTodayPriceInfo();
+			resolve(tempArr);
+		});
+
 	});
 }
 
