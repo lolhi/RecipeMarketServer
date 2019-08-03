@@ -59,10 +59,10 @@ app.use(bodyParser.urlencoded({
    extended: true
 }));
 
-var server = app.listen(8080, function(){
- console.log("Express server has started on port 8080");
-});
-/*
+//var server = app.listen(8080, function(){
+// console.log("Express server has started on port 8080");
+//});
+
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
 	configDir: '~/let',
@@ -76,7 +76,7 @@ require('greenlock-express').create({
   	renewBy: 80 * 24 * 60 * 60 * 1000,
 	app: app
 }).listen(80, 443);
-*/
+
 var DBClass = require('./class/DBClass');
 var PriceInfo = new DBClass(require('./models/priceinfo'));
 var RecipeBasics = new DBClass(require('./models/recipe_basic'));
@@ -171,6 +171,8 @@ function GetTodayPriceInfo(){
 						else{
 							jsonStr[0][k].Severity = 6;
 						}
+						if(jsonStr[0][k].item_name == '피마늘' | jsonStr[0][k].item_name == '깐마늘(국산)')
+							continue;
 						var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
 							PRDLST_NAME: jsonStr[0][k].item_name,
 							SPCIES_NAME: jsonStr[0][k].kind_name,
@@ -202,8 +204,7 @@ function GetTodayPriceInfo(){
 						if(k1 == minIdx)
 							continue;
 						if(jsonStr[k1].length > jsonStr[minIdx].length){
-							var diff = jsonStr[k1].length - jsonStr[minIdx].length;
-							jsonStr[k1].splice(k, diff);
+							jsonStr[k1].splice(k, 1);
 						}
 					}
 					k--;

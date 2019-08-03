@@ -38,20 +38,19 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 return;
             }
             var i = 0;
-            FindMaterial(tpi, res, i, call, respond)
+            FindMaterial(tpi, res, i, call, respond, 0)
         }).sort({Severity: 1, CommonYearReduction: -1});
     });
 
-    async function FindMaterial(tpi, res, i, call, respond){
-        await FindMaterialPromise(tpi[i])
+    async function FindMaterial(tpi, res, i, call, respond, findIdx){
+        await FindMaterialPromise(tpi[i], findIdx)
             .then(function(rb){
                 //성공
                 var j;
                 for(j = 0; j < respond.length; j++){
                     if(respond[j].RECIPE_NM_KO == rb.RECIPE_NM_KO){
                         // 중복레시피 발견시 pass
-                        i++;
-                        FindMaterial(tpi,res, i, call, respond);
+                        FindMaterial(tpi,res, i, call, respond, findIdx + 1);
                         return;
                     }
                 }
@@ -62,7 +61,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                     return;
                 }
                 i++;
-                FindMaterial(tpi, res, i, call, respond);
+                FindMaterial(tpi, res, i, call, respond, 0);
             }, function(errorlog){
                 //실패
                 console.log(errorlog);
@@ -70,27 +69,216 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                     res.json(respond);
                     return;
                 }
-                i++;
-                FindMaterial(tpi, res, i, call, respond);
+                FindMaterial(tpi, res, i, call, respond, findIdx + 1);
             });
     }
 
-    var FindMaterialPromise =  function(tpiItem){
+    function MakeQuery(IrdntnameArr){
+    
+        var PrdlstnameArr = new Array();
+        var i;
+
+        for(i = 0; i < IrdntnameArr.length; i++){
+            var Prdlstname = new Object();
+            Prdlstname['IRDNT_NM'] = IrdntnameArr[i];
+            PrdlstnameArr.push(Prdlstname)
+        }
+        return PrdlstnameArr;
+    }
+    var FindMaterialPromise =  function(tpiItem, findIdx){
+        var query = new Object();
+        
+        
+        if(tpiItem.PRDLST_NAME == '쌀'){
+            query['$or'] = MakeQuery(['멥쌀', '불린 멥쌀', '불린 쌀', '쌀'])
+        }
+        else if(tpiItem.PRDLST_NAME == '찹쌀'){
+            query['$or'] = MakeQuery(['불린 찹쌀', '찹쌀']);
+        }
+        else if(tpiItem.PRDLST_NAME == '배추'){
+            query['$or'] = MakeQuery(['배추', '절인 배추']);
+        }
+        else if(tpiItem.PRDLST_NAME == '상추'){
+            query['$or'] = MakeQuery(['상추', '상추잎']);
+        }
+        else if(tpiItem.PRDLST_NAME == '얼갈이배추'){
+            query['$or'] = MakeQuery(['얼갈이배추', '풋배추']);
+        }
+        else if(tpiItem.PRDLST_NAME == '오이'){
+            query['$or'] = MakeQuery(['오이', '백오이']);
+        }
+        else if(tpiItem.PRDLST_NAME == '팥'){
+            query['$or'] = MakeQuery(['팥', '삶은팥']);
+        }
+        else if(tpiItem.PRDLST_NAME == '붉은고추'){
+            query['IRDNT_NM'] = '붉은 고추';
+        }
+        else if(tpiItem.PRDLST_NAME == '피망'){
+            query['IRDNT_NM'] = '청피망';
+        }
+        else if(tpiItem.PRDLST_NAME == '파프리카'){
+            query['IRDNT_NM'] = '파프리카(포함)';
+        }
+        else if(tpiItem.PRDLST_NAME == '호박'){
+            query['IRDNT_NM'] = '애호박';
+        }
+        else{
+            query['IRDNT_NM'] = tpiItem.PRDLST_NAME;
+        }
+
         return new Promise(function(resolve, reject){
-            RecipeMaterial.DBname.findOne({IRDNT_NM: tpiItem.PRDLST_NAME}, function(err,rm){
+            RecipeMaterial.DBname.find(query, function(err,rm){
                 if(err){
                     console.error(err);
                     return;
                 }
                 
-                if(rm == null){
+                if(rm.length == 0){
                     reject("RecipeMaterial not found : " + tpiItem.PRDLST_NAME);
                     return;
                 }
 
                 // 재료 단위 통일시 정렬 후 가장 많이 쓰이는 걸로 검색할것
+                var j;
+                for(j = 0; j < rm.length; j++){
+                    var tmp = rm[j].IRDNT_CPCTY.match(/\d/g);
+                    var tmp2 = 0;
+                    if(/\d\D\d\/\d/.test(rm[j].IRDNT_CPCTY))
+                        tmp2 = (Number(tmp[0]) * Number(tmp[2]) + Number(tmp[1])) / Number(tmp[2])
+                    else if(/\d\/\d/.test(rm[j].IRDNT_CPCTY))
+                        tmp2 = Number(tmp[0]) / Number(tmp[1])
+                    else if(/\d\~\d|\d\-\d/.test(rm[j].IRDNT_CPCTY))
+                        tmp2 = Number(tmp[1])
+                    else if(/\d/.test(rm[j].IRDNT_CPCTY)){
+                        var k;
+                        for(k = 0; k < tmp.length; k++){
+                            tmp2 += Math.pow(10, tmp.length - 1 - k) * Number(tmp[k]);
+                        }
+                    }
+                    if(/컵/.test(rm[j].IRDNT_CPCTY))
+                        rm[j].ConverWeight = tmp2 * 190;
+                    else if(/g|G/.test(rm[j].IRDNT_CPCTY))
+                        rm[j].ConverWeight = tmp2;
+                    else if(/되/.test(rm[j].IRDNT_CPCTY))
+                        rm[j].ConverWeight = tmp2 * 1600;
+                    else if(/포기/.test(rm[j].IRDNT_CPCTY))
+                        rm[j].ConverWeight = tmp2 * 3000;
+                    else if(/단/.test(rm[j].IRDNT_CPCTY)){
+                        if(tpiItem.PRDLST_NAME == '얼갈이배추')
+                            rm[j].ConverWeight = tmp2 * 1500;
+                        else if(tpiItem.PRDLST_NAME == '시금치')
+                            rm[j].ConverWeight = tmp2 * 300;
+                        else if(tpiItem.PRDLST_NAME == '열무')
+                            rm[j].ConverWeight = tmp2 * 2000;
+                        else if(tpiItem.PRDLST_NAME == '대파')
+                            rm[j].ConverWeight = tmp2 * 2000;
+                        else if(tpiItem.PRDLST_NAME == '미나리')
+                            rm[j].ConverWeight = tmp2 * 1000;
+                    }
+                    else if(/개|토막|팩|통|뿌리|알|소|대|톨|쪽|줄기|봉|조각/.test(rm[j].IRDNT_CPCTY)){
+                        var avgWeight;
+                        if(/반개/.test(rm[j].IRDNT_CPCTY))
+                            tmp2 = 0.5;
+                        if(/작은토막/.test(rm[j].IRDNT_CPCTY))
+                            tmp2 = 0.1;
 
-                RecipeBasics.DBname.findOne({RECIPE_ID: rm.RECIPE_ID}, function(err,rb){
+                        if(tpiItem.PRDLST_NAME == '오이')
+                            avgWeight = 150;
+                        else if(tpiItem.PRDLST_NAME == '붉은고추')
+                            avgWeight = 30;
+                        else if(tpiItem.PRDLST_NAME == '피망')
+                            avgWeight = 90;
+                        else if(tpiItem.PRDLST_NAME == '파프리카')
+                            avgWeight = 100;
+                        else if(tpiItem.PRDLST_NAME == '호박')
+                            avgWeight = 270;
+                        else if(tpiItem.PRDLST_NAME == '고구마')
+                            avgWeight = 160;
+                        else if(tpiItem.PRDLST_NAME == '감자')
+                            avgWeight = 150;
+                        else if(tpiItem.PRDLST_NAME == '양배추')
+                            avgWeight = 2000;
+                        else if(tpiItem.PRDLST_NAME == '배추')
+                            avgWeight = 3000;
+                        else if(tpiItem.PRDLST_NAME == '시금치')
+                            avgWeight = 16;
+                        else if(tpiItem.PRDLST_NAME == '토마토')
+                            avgWeight = 250;
+                        else if(tpiItem.PRDLST_NAME == '방울토마토')
+                            avgWeight = 12;
+                        else if(tpiItem.PRDLST_NAME == '딸기')
+                            avgWeight = 20;
+                        else if(tpiItem.PRDLST_NAME == '무')
+                            avgWeight = 700;
+                        else if(tpiItem.PRDLST_NAME == '당근')
+                            avgWeight = 70;
+                        else if(/고추/.test(tpiItem.PRDLST_NAME))
+                            avgWeight = 30;
+                        else if(tpiItem.PRDLST_NAME == '마늘'){
+                            if(/통/.test(rm[j].IRDNT_CPCTY))
+                                avgWeight = 50;
+                            else
+                                avgWeight = 10;
+                        }
+                        else if(tpiItem.PRDLST_NAME == '양파')
+                            avgWeight = 200;
+                        else if(tpiItem.PRDLST_NAME == '대파')
+                            avgWeight = 40;
+                        else if(tpiItem.PRDLST_NAME == '쪽파')
+                            avgWeight = 20;
+                        else if(tpiItem.PRDLST_NAME == '생강'){
+                            if(/개/.test(rm[j].IRDNT_CPCTY))
+                                avgWeight = 300;
+                            else
+                                avgWeight = 20;
+                        }
+                        else if(tpiItem.PRDLST_NAME == '미나리')
+                            avgWeight = 2;
+                        else if(tpiItem.PRDLST_NAME == '깻잎')
+                            avgWeight = 20;
+                        else if(tpiItem.PRDLST_NAME == '땅콩')
+                            avgWeight = 1;
+                        else if(tpiItem.PRDLST_NAME == '느타리버섯')
+                            avgWeight = 14;
+                        else if(tpiItem.PRDLST_NAME == '팽이버섯'){
+                            if(/봉/.test(rm[j].IRDNT_CPCTY))
+                                avgWeight = 50;
+                            else
+                                avgWeight = 1;
+                        }
+                        else if(tpiItem.PRDLST_NAME == '새송이버섯')
+                            avgWeight = 100;
+                        else if(tpiItem.PRDLST_NAME == '사과')
+                            avgWeight = 300;
+                        else if(tpiItem.PRDLST_NAME == '배')
+                            avgWeight = 300;
+                        else if(tpiItem.PRDLST_NAME == '바나나')
+                            avgWeight = 100;
+                        else if(tpiItem.PRDLST_NAME == '오렌지')
+                            avgWeight = 100;
+                        else if(tpiItem.PRDLST_NAME == '레몬'){
+                            if(/개/.test(rm[j].IRDNT_CPCTY))
+                                avgWeight = 150;
+                            else 
+                                avgWeight = 20;
+                        }
+                        else if(tpiItem.PRDLST_NAME == '파인애플')
+                            avgWeight = 20;
+
+                        rm[j].ConverWeight = tmp2 * avgWeight;
+                    }
+                    else if(/장|묶음/.test(rm[j].IRDNT_CPCTY))
+                        rm[j].ConverWeight = tmp2 * 2;
+                    else{
+                        rm[j].ConverWeight = 2;
+                    }
+                }
+
+                rm.sort(function (a, b) { 
+					return a.ConverWeight < b.ConverWeight ? 1 : a.ConverWeight > b.ConverWeight ? -1 : 0;  
+				});
+
+                RecipeBasics.DBname.findOne({RECIPE_ID: rm[findIdx].RECIPE_ID}, function(err,rb){
                     if(err){
                         console.error(err);
                         return;
@@ -103,7 +291,6 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
 
                     resolve(rb);
                 });
-                
             });
         });
     }
