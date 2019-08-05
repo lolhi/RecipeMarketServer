@@ -64,7 +64,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 FindMaterial(tpi, res, i, call, respond, 0);
             }, function(errorlog){
                 //실패
-                console.log(errorlog);
+                console.log("code : " + errorlog.code + ", msg : " + errorlog.msg);
                 if(respond.length == 6 || call == tpi.length){
                     res.json(respond);
                     return;
@@ -87,7 +87,6 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     }
     var FindMaterialPromise =  function(tpiItem, findIdx){
         var query = new Object();
-        
         
         if(tpiItem.PRDLST_NAME == '쌀'){
             query['$or'] = MakeQuery(['멥쌀', '불린 멥쌀', '불린 쌀', '쌀'])
@@ -129,12 +128,24 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         return new Promise(function(resolve, reject){
             RecipeMaterial.DBname.find(query, function(err,rm){
                 if(err){
-                    console.error(err);
+                    var errorlog = new Object();
+                    errorlog['code'] = "3";
+                    errorlog['msg'] = "RecipeMaterial : " + err
+                    reject(errorlog);
                     return;
                 }
-                
                 if(rm.length == 0){
-                    reject("RecipeMaterial not found : " + tpiItem.PRDLST_NAME);
+                    var errorlog = new Object();
+                    errorlog['code'] = "1";
+                    errorlog['msg'] = "RecipeMaterial not found : " + tpiItem.PRDLST_NAME;
+                    reject(errorlog);
+                    return;
+                }
+                if(findIdx > rm.length - 1){
+                    var errorlog = new Object();
+                    errorlog['code'] = "0";
+                    errorlog['msg'] = "find all material";
+                    reject(errorlog);
                     return;
                 }
 
@@ -280,12 +291,18 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
 
                 RecipeBasics.DBname.findOne({RECIPE_ID: rm[findIdx].RECIPE_ID}, function(err,rb){
                     if(err){
-                        console.error(err);
+                        var errorlog = new Object();
+                        errorlog['code'] = "3";
+                        errorlog['msg'] = "RecipeBasics : " + err
+                        reject(errorlog);
                         return;
                     }
 
                     if(rb == null){
-                        reject("RecipeBasic not found");
+                        var errorlog = new Object();
+                        errorlog['code'] = "2";
+                        errorlog['msg'] = "RecipeBasic not found ID: " + rm[findIdx].RECIPE_ID
+                        reject(errorlog);
                         return;
                     }
 
@@ -335,60 +352,50 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
         });
     });
 
-    app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
-        RecipeMaterial.DBname.find({IRDNT_NM: req.params.SEARCHSTRING}, function(err,rm){
-            if(err){
-                console.log(err);
-                return;
-            }
-            searchres = new Array();
-            if(rm.length != 0){
-                var i;
-                var lenlen = 0;
-                
-                for(i = 0; i < rm.length; i++){
-                    RecipeBasics.DBname.count({RECIPE_ID: rm[i].RECIPE_ID},function(err, count){
-                        if(err) console.log(err);
-                        lenlen += count; 
-                    });
+    async function SearchMaterial(query, res, respond, findIdx){
+        await FindMaterialPromise(query, findIdx)
+            .then(function(rb){
+                //성공
+                respond.push(rb);
+                SearchMaterial(query, res, respond, findIdx + 1);
+            }, function(errorlog){
+                //실패
+                console.log("code : " + errorlog.code + ", msg : " + errorlog.msg);
+                if(errorlog.code == 0){
+                    //findIdx가 rm length보다 김
+                    res.json(respond);
+                    return;
                 }
-                for(i = 0; i < rm.length; i++){
-                    RecipeBasics.DBname.find({RECIPE_ID: rm[i].RECIPE_ID}, function(err, rb){
+                else if(errorlog.code == 1){
+                    //Material 못찾음
+                    RecipeBasics.DBname.find({$or: [ { RECIPE_NM_KO: query.PRDLST_NAME }, 
+                        { NATION_NM: query.PRDLST_NAME }, 
+                        { TY_NM: query.PRDLST_NAME } ] }, function(err, rb){
+                        var len = rb.length;
                         if(err){
                             console.log(err);
                             return;
                         }
-                        if(rb.length !=0) {
-                            var j;
-                            for(j = 0; j < rb.length; j++)
-                                searchres.push(rb[j]);
-                            if(searchres.length == lenlen){
-                                res.json(searchres);
-                                searchres.push(rb);
-                            }
+                        if(rb.length != 0){
+                            res.json(rb);
+                        }
+                        else{
+                            res.json([]);
                         }
                     });
                 }
-                return;
-            }
-            else{
-                RecipeBasics.DBname.find({$or: [ { RECIPE_NM_KO: req.params.SEARCHSTRING }, 
-                    { NATION_NM: req.params.SEARCHSTRING }, 
-                    { TY_NM: req.params.SEARCHSTRING } ] }, function(err, rb){
-                    var len = rb.length;
-                    if(err){
-                        console.log(err);
-                        return;
-                    }
-                    if(rb.length != 0){
-                        res.json(rb);
-                    }
-                    else{
-                        res.json([]);
-                    }
-                });
-            }
-        });
+                else if(errorlog.code == 2){
+                    //Basics 못찾음
+                    SearchMaterial(query, res, respond, findIdx + 1);
+                }
+            });
+    }
+
+    app.get('/SearchRecipe/:SEARCHSTRING',function(req,res){
+        var query = new Object();
+        query['PRDLST_NAME'] = req.params.SEARCHSTRING;
+        var respond = new Array();
+        SearchMaterial(query, res, respond, 0);
     });
 
     app.get('/SearchRecipe/:CATEGORY/:SEARCHSTRING',function(req,res){
