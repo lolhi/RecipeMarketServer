@@ -26,7 +26,7 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
     app.get('/GetPopular',function(req,res){
         TodaySpecialPrice.DBname.find({}, function(err, ud){
             res.json(ud);
-        }).sort({CommonYearReduction: -1});
+        }).sort({CommonYearReduction: -1}).limit(6);
     });
 
     app.get('/TodaySpecialPrice',function(req,res){

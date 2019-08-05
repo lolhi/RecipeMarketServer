@@ -104,7 +104,7 @@ TodaySpecialPrice.DBname.remove(function(err, output){
 	GetTodayPriceInfo();
 });
 
-//setInterval(GetTodayPriceInfo, 86400000);
+setInterval(GetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
