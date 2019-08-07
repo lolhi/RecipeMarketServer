@@ -588,6 +588,31 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         });
     });
 
+    app.post('/ConfirmClipping', function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        UserData.DBname.findOne({ID: req.body.ID}, function(err,ud){
+            if(err) return res.status(500).json({ error: "Confirm clipping fail" });
+            
+            var k;    
+            var flag = 0;
+            for(k = 0; k < ud.CLIPPING.length; k++){
+                if(ud.CLIPPING[k].RECIPE_ID == req.body.RECIPE_ID){
+                    flag = 1;
+                    break;
+                }
+            }
+            if(flag == 1){
+                res.status(200).end("exist");
+                return;
+            }
+
+            res.status(200).end('not exist');
+        });
+    }
+
     app.post('/AddClipping', function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
@@ -601,6 +626,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             for(k = 0; k < ud.CLIPPING.length; k++){
                 if(ud.CLIPPING[k].RECIPE_ID == req.body.RECIPE_ID){
                     flag = 1;
+                    ud.CLIPPING.splice(k, 1);
                     break;
                 }
             }
