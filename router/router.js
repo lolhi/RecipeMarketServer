@@ -1,4 +1,4 @@
-module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData){
+module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData){
     var searchres;
 
     app.get('/PrivacyPolicy',function(req,res){
@@ -579,7 +579,6 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
             for(i = 0; i < ud.CLIPPING.length; i++){
                 RecipeBasics.DBname.findOne({RECIPE_ID: ud.CLIPPING[i].RECIPE_ID}, function(err, rb){
                     if(err) return res.status(500).json({ error: "get clipping fail" });
-		            console.log('rb: ' + rb);
                     rbfind.push(rb);
                     if(rbfind.length == ud.CLIPPING.length){
                         res.json(rbfind);
@@ -673,6 +672,80 @@ module.exports = function(app, RecipeBasics, RecipeMaterial, RecipeProcess, Toda
                 console.log("user data already exist");
                 res.end('user data already exist');
             }
+        });
+    });
+
+    app.post('/payment', function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+        var url = 'https://kapi.kakao.com/v1/payment/ready';
+        request({
+			url: url,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'KakaoAK ' + config.KakakoAK
+            },
+			qs:{
+                cid: "TC0ONETIME",                                                  // 가맹점 코드, 10자, String
+                //cid_secret: "gg",                                                 // 가맹점 코드 인증키, 24자 숫자 + 영문 소문자, String
+				partner_order_id: "1",                                              // 가맹점 주문번호, 최대 100자, String
+				partner_user_id: "1",                                               // 가맹점 회원 id, 최대 100자, String
+				item_name: "당근",                                                  // 상품명, 최대 100자, String
+				//item_code: "02",                                                  // 상품코드, 최대 100자, String  
+				quantity: 300,                                                      // 상품 수량, Integer
+				total_amount: 5000,                                                 // 상품 총액, Integer
+                tax_free_amount: 0,                                                 // 상품 비과세 금액, Integer
+                //vat_amount: 0,                                                    // 상품 부가세 금액(안보낼 경우 (상품총액 - 상품 비과세 금액)/11 : 소숫점이하 반올림), Integer
+                approval_url: 'https://' + config.domain + '/readysuccess',         // 결제 성공시 redirect url. 최대 255자, String
+                cancel_url: 'https://' + config.domain + '/readycancel',            // 결제 취소시 redirect url. 최대 255자, String
+                fail_url: 'https://' + config.domain + '/readyfail'                 // 결제 실패시 redirect url. 최대 255자, String
+                //available_cards: {Json Array},                                    // 카드사 제한 목록(없을 경우 전체), Json Array 
+                //payment_method_type: "CARD or MONEY",                             // 결제 수단 제한(없을 경우 전체), String
+                //install_month: 0~12,                                              // 카드할부개월수. 0~12(개월) 사이의 값, Interger
+                //custom_json: {Json Object},                                       // 결제화면에 보여주고 싶은 custom message. 사전협의가 필요한 값, Json Obejct(key, value 모두 String)
+			}
+		}, function (error, response, body) {
+			if(error){
+				console.log('payment request module error : ' + error);
+				return;
+            }
+            
+            var jsondata = JSON.parse(body);
+            // android_app_scheme의 주소를 webview로 띄어줄것
+            res.json(jsondata);
+		});
+    });
+
+    app.get('/readysuccess', function(req, res){
+        var url = 'https://kapi.kakao.com/v1/payment/ready';
+        request({
+			url: url,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=utf-8',
+                'Authorization': 'KakaoAK ' + config.KakakoAK
+            },
+			qs:{
+                cid: "TC0ONETIME",                                                  // 가맹점 코드, 10자, String
+                //cid_secret: "gg",                                                 // 가맹점 코드 인증키, 24자 숫자 + 영문 소문자, String
+                tid: "test",                                                        // 결제 고유번호. 결제준비 API의 응답에서 얻을 수 있음, String
+                partner_order_id: "1",                                              // 가맹점 주문번호, 최대 100자, String
+				partner_user_id: "1",                                               // 가맹점 회원 id, 최대 100자, String
+                pg_token: req.query.pg_token                                        // 결제승인 요청을 인증하는 토큰. String
+                //payload: "Test",                                                  // 해당 Request와 매핑해서 저장하고 싶은 값. 최대 200자, String
+                //total_amount: 2200                                                // 상품총액. 결제준비 API에서 요청한 total_amount 값과 일치해야 함, Integer
+            }
+		}, function (error, response, body) {
+            if(error){
+				console.log('payment request module error : ' + error);
+				return;
+            }
+
+            var jsondata = JSON.parse(body);
+            res.json(jsondata);
         });
     });
 }
