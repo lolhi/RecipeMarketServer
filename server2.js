@@ -115,7 +115,7 @@ function GetTodayPriceInfo(){
 	var date = new Date(tempdate.getFullYear(),tempdate.getMonth(), tempdate.getDate() - 1);
 	var category_code = 100;
 	var diff = 0;
-
+	console.log("today: " + tempdate.getFullYear() + '.' + (tempdate.getMonth()+1) + '.' + tempdate.getDate() +', start GetTodayPriceInfo()');
 	RequestaFewDaysAgo(date, category_code, new Array(), new Array(), diff)
 		.then(function(jsonStr){
 			//성공
