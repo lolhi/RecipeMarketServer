@@ -87,7 +87,7 @@ var UserData = new DBClass(require('./models/userdata'));
 var Notice = new DBClass(require('./models/notice'));
 var TodayPriceInfo = new DBClass('');
 
-var router = require('./router/router')(app, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData);
+var router = require('./router/router')(app, request,config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData);
 
 var ServiceKey = config.ServiceKey;
 
