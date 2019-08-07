@@ -611,7 +611,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
 
             res.status(200).end('not exist');
         });
-    }
+    });
 
     app.post('/AddClipping', function(req, res){
         if(!isFormData(req)){
