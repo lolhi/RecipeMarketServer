@@ -95,20 +95,24 @@ var ServiceKey = config.ServiceKey;
 //setInterval(MakeDBForPriceInfo, 2629800000);
 
 // Get today priceinfomation
-TodaySpecialPrice.DBname.remove(function(err, output){
-	if(err) {
-		console.log('error: database remove failure'); 
-		return;
-	}
-	console.log('db remove success');
-	GetTodayPriceInfo();
-});
-
-setInterval(GetTodayPriceInfo, 86400000);
+CallGetTodayPriceInfo()
+setInterval(CallGetTodayPriceInfo, 86400000);
 
 // Test for server
 //MakeTodaySpecialPrice();
 //MakeDBForRecipeBasics();
+
+
+function CallGetTodayPriceInfo(){
+	TodaySpecialPrice.DBname.remove(function(err, output){
+		if(err) {
+			console.log('error: database remove failure'); 
+			return;
+		}
+		console.log('db remove success');
+		GetTodayPriceInfo();
+	});
+}
 
 function GetTodayPriceInfo(){
 	var tempdate = new Date();
