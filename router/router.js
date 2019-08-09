@@ -625,7 +625,6 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             var flag = 0;
             for(k = 0; k < ud.CLIPPING.length; k++){
                 if(ud.CLIPPING[k].RECIPE_ID == req.body.RECIPE_ID){
-		    ud.CLIPPING.splice(k,1);
                     flag = 1;
                     ud.CLIPPING.splice(k, 1);
                     break;
@@ -634,7 +633,6 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             if(flag == 1){
 		UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{CLIPPING: ud.CLIPPING}}, function(err1, reply){
                     if(err1) return res.status(500).json({ error: "add clipping fail" });
-
                     res.status(200).end('exist');
                 });
                 return;
