@@ -528,13 +528,12 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         }
 
         RecipeBasics.DBname.findOne({RECIPE_ID: req.body.RECIPE_ID}, function(err, rb){
-            if(err) return res.status(500).json({ error: "Delete comment fail" });
-           
+            if(err) return res.status(500).json({ error: "Delete comment fail" });           
             var i;
             for(i = 0; i < rb.COMMENT.length; i++){
-                if(rb.COMMENT[i].WRITER == req.params.WRITER &&
-                    rb.COMMENT[i].TIME == req.params.TIME &&
-                    rb.COMMENT[i].COMM == req.params.COMM){
+                if(rb.COMMENT[i].WRITER == req.body.WRITER &&
+                    rb.COMMENT[i].TIME == req.body.TIME &&
+                    rb.COMMENT[i].COMM == req.body.COMM){
                     // 해당 댓글 찾음
                     rb.COMMENT.splice(i, 1);
                     break;
