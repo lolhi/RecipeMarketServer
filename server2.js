@@ -129,7 +129,7 @@ function GetTodayPriceInfo(){
 					jsonStr[j] = new Array();
 					var k;
 					for(k = 0; k < jsonStr.length; k++){
-						if(jsonStr[k] == "0")
+						if(jsonStr[k] == "0" || jsonStr[k].length == 0)
 							continue;
 						var r;
 						for(r = 0; r < jsonStr[k].length; r++)
