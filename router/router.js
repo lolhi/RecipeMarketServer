@@ -589,29 +589,60 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
 
     });
 
+    var GetClippingDataPromise = function(clippingData){
+        return new Promise(function(resolve, reject){
+            RecipeBasics.DBname.findOne({RECIPE_ID: clippingData.RECIPE_ID}, function(err, rb){
+                if(err) return res.status(500).json({ error: "get clipping fail" });
+
+                if(rb == null){
+                    var errorlog = new Object();
+                    errorlog['code'] = "2";
+                    errorlog['msg'] = "RecipeBasic not found ID: " + rm[findIdx].RECIPE_ID;
+                    reject(errorlog);
+                    return;
+                }
+                
+                resolve(rb);
+            });
+        });
+    }
+
+    async function GetClippingData(res, clippingData, rbClipping, i){
+        await GetClippingDataPromise(clippingData[i])
+        .then(function(rb){
+            rbClipping.push(rb);
+            if(rbClipping.length == clippingData.length){
+                res.json(rbClipping);
+                return;
+            }
+
+            GetClippingData(res, clippingData, rbClipping, i + 1);
+        }, function(errorlog){
+            console.log("code : " + errorlog.code + ", msg : " + errorlog.msg);
+
+            if(rbClipping.length == clippingData.length)
+                res.json(rbClipping);
+            else
+                GetClippingData(res, clippingData, rbClipping, i + 1);
+        });
+
+    }
+
     app.post('/GetClipping' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
 		    return;
         }
-        var rbfind = new Array();
+        var rbClipping = new Array();
         UserData.DBname.findOne({ID : req.body.ID}, function(err, ud){
             if(err) return res.status(500).json({ error: "get clipping fail" });
            
-            var i;
 	        if(ud.CLIPPING.length == 0){
                 res.status(200).end("");
                 return;
             }
-            for(i = 0; i < ud.CLIPPING.length; i++){
-                RecipeBasics.DBname.findOne({RECIPE_ID: ud.CLIPPING[i].RECIPE_ID}, function(err, rb){
-                    if(err) return res.status(500).json({ error: "get clipping fail" });
-                    rbfind.push(rb);
-                    if(rbfind.length == ud.CLIPPING.length){
-                        res.json(rbfind);
-                    }
-                });
-            }
+
+            GetClippingData(res,ud.CLIPPING, rbClipping, 0);
         });
     });
 
