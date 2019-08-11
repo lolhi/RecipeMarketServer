@@ -521,6 +521,34 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         })
     });
 
+    app.post('/DeleteComment' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+
+        RecipeBasics.DBname.findOne({RECIPE_ID: req.body.RECIPE_ID}, function(err, rb){
+            if(err) return res.status(500).json({ error: "Delete comment fail" });
+           
+            var i;
+            for(i = 0; i < rb.COMMENT.length; i++){
+                if(rb.COMMENT[i].WRITER == req.params.WRITER &&
+                    rb.COMMENT[i].TIME == req.params.TIME &&
+                    rb.COMMENT[i].COMM == req.params.COMM){
+                    // 해당 댓글 찾음
+                    rb.COMMENT.splice(i, 1);
+                    break;
+                }
+            }
+            
+            RecipeBasics.DBname.findOneAndUpdate({RECIPE_ID: req.body.RECIPE_ID}, {$set:{COMMENT: rb.COMMENT}}, function(err1, reply){
+                if(err1) return res.status(500).json({ error: "delet comment fail" });
+
+                res.status(200).end('delete complete');
+            })
+        })
+    });
+
     app.post('/AddResentSearch' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
@@ -631,7 +659,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                 }
             }
             if(flag == 1){
-		UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{CLIPPING: ud.CLIPPING}}, function(err1, reply){
+		        UserData.DBname.findOneAndUpdate({ID: req.body.ID}, {$set:{CLIPPING: ud.CLIPPING}}, function(err1, reply){
                     if(err1) return res.status(500).json({ error: "add clipping fail" });
                     res.status(200).end('exist');
                 });
