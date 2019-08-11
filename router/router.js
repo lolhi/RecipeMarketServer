@@ -368,9 +368,9 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                 }
                 else if(errorlog.code == 1){
                     //Material 못찾음
-                    RecipeBasics.DBname.find({$or: [ { RECIPE_NM_KO: query.PRDLST_NAME }, 
-                        { NATION_NM: query.PRDLST_NAME }, 
-                        { TY_NM: query.PRDLST_NAME } ] }, function(err, rb){
+                    RecipeBasics.DBname.find({$or: [ { RECIPE_NM_KO: { $regex : query.PRDLST_NAME } }, 
+                        { NATION_NM: { $regex : query.PRDLST_NAME } }, 
+                        { TY_NM: { $regex : query.PRDLST_NAME } } ] }, function(err, rb){
                         var len = rb.length;
                         if(err){
                             console.log(err);
