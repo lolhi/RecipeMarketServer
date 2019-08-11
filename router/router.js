@@ -29,6 +29,12 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         }).sort({CommonYearReduction: -1}).limit(6);
     });
 
+    app.get('/GetPriceInfo',function(req,res){
+        TodaySpecialPrice.DBname.find({CommonYearReduction: {$gt: 5}}, function(err, tsp){
+            res.json(tsp);
+        });
+    });
+
     app.get('/TodaySpecialPrice',function(req,res){
         var call = 0;
         var respond = new Array();
@@ -601,7 +607,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                     reject(errorlog);
                     return;
                 }
-                
+
                 resolve(rb);
             });
         });
