@@ -190,6 +190,10 @@ function GetTodayPriceInfo(){
 						}
 						if(jsonStr[0][k].item_name == '피마늘')
 							continue;
+							
+						if(jsonStr[0][k].item_name == '깐마늘(국산)')
+							jsonStr[0][k].item_name = '마늘'
+
 						var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
 							PRDLST_NAME: jsonStr[0][k].item_name,
 							SPCIES_NAME: jsonStr[0][k].kind_name,
