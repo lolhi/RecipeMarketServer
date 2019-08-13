@@ -227,6 +227,7 @@ function GetTodayPriceInfo(){
 					k--;
 				}
 			}
+		console.log("today: " + tempdate.getFullYear() + '.' + (tempdate.getMonth()+1) + '.' + tempdate.getDate() +', end GetTodayPriceInfo()');
 		}, function(){
 			//실패
 		});
