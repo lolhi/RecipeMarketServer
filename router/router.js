@@ -127,6 +127,9 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         else if(tpiItem.PRDLST_NAME == '호박'){
             query['IRDNT_NM'] = '애호박';
         }
+        else if(tpiItem.PRDLST_NAME == '깐마늘(국산)'){
+            query['IRDNT_NM'] = '마늘';
+        }
         else{
             query['IRDNT_NM'] = tpiItem.PRDLST_NAME;
         }
@@ -231,7 +234,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                             avgWeight = 70;
                         else if(/고추/.test(tpiItem.PRDLST_NAME))
                             avgWeight = 30;
-                        else if(tpiItem.PRDLST_NAME == '마늘'){
+                        else if(tpiItem.PRDLST_NAME == '깐마늘(국산)'){
                             if(/통/.test(rm[j].IRDNT_CPCTY))
                                 avgWeight = 50;
                             else

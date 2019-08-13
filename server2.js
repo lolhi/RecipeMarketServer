@@ -125,11 +125,10 @@ function GetTodayPriceInfo(){
 			//성공
 			var j;
 			for(j = 0; j < jsonStr.length; j++){
-				if(jsonStr[j] == "0"){
-					jsonStr[j] = new Array();
+				if(jsonStr[j].length == 0){
 					var k;
 					for(k = 0; k < jsonStr.length; k++){
-						if(jsonStr[k] == "0" || jsonStr[k].length == 0)
+						if(jsonStr[k].length == 0)
 							continue;
 						var r;
 						for(r = 0; r < jsonStr[k].length; r++)
@@ -139,12 +138,27 @@ function GetTodayPriceInfo(){
 				}
 			}
 			// for문 돌려서 length 체크, 다르면 큰 배열에서 작은배열 검색 후 없는거 삭제
-			var k;
+		 	var k;
 			for(k = 0; k < jsonStr[0].length; k++){
 				if(jsonStr[0][k].item_name == jsonStr[1][k].item_name && jsonStr[0][k].kind_name == jsonStr[1][k].kind_name &&
 					jsonStr[0][k].item_name == jsonStr[2][k].item_name && jsonStr[0][k].kind_name == jsonStr[2][k].kind_name &&
 					jsonStr[0][k].item_name == jsonStr[3][k].item_name && jsonStr[0][k].kind_name == jsonStr[3][k].kind_name &&
 					jsonStr[0][k].item_name == jsonStr[4][k].item_name && jsonStr[0][k].kind_name == jsonStr[4][k].kind_name){
+						if(jsonStr[0][k].dpr1 == '-' || jsonStr[0][k].dpr6 == '-' || jsonStr[0][k].dpr7 == '-' ||
+							jsonStr[1][k].dpr1 == '-' || jsonStr[1][k].dpr6 == '-' || jsonStr[1][k].dpr7 == '-' ||
+							jsonStr[2][k].dpr1 == '-' || jsonStr[2][k].dpr6 == '-' || jsonStr[2][k].dpr7 == '-' ||
+							jsonStr[3][k].dpr1 == '-' || jsonStr[3][k].dpr6 == '-' || jsonStr[3][k].dpr7 == '-' ||
+							jsonStr[4][k].dpr1 == '-' || jsonStr[4][k].dpr6 == '-' || jsonStr[4][k].dpr7 == '-' ||
+							jsonStr[0][k].item_name == '포도' || jsonStr[0][k].item_name == '오렌지' ||
+							/수입/.test(jsonStr[0][k].kind_name) || /중국/.test(jsonStr[0][k].kind_name) || /인도/.test(jsonStr[0][k].kind_name)){
+								jsonStr[0].splice(k, 1);
+								jsonStr[1].splice(k, 1);
+								jsonStr[2].splice(k, 1);
+								jsonStr[3].splice(k, 1);
+								jsonStr[4].splice(k, 1);
+								k--;
+								continue;
+						}
 						// 우선순위 정해줄것
 						if(jsonStr[0][k].CommonYearReduction > 5 && jsonStr[0][k].YearReduction > 5 && 
 							jsonStr[1][k].CommonYearReduction > 5 && jsonStr[1][k].YearReduction > 5 &&
@@ -174,7 +188,7 @@ function GetTodayPriceInfo(){
 						else{
 							jsonStr[0][k].Severity = 6;
 						}
-						if(jsonStr[0][k].item_name == '피마늘' | jsonStr[0][k].item_name == '깐마늘(국산)')
+						if(jsonStr[0][k].item_name == '피마늘')
 							continue;
 						var newTodaySpecialPrice = new TodaySpecialPrice.DBname({
 							PRDLST_NAME: jsonStr[0][k].item_name,
@@ -246,7 +260,8 @@ var RequestaFewDaysAgo = async function(date, category_code, jsonStr, tempArr, d
 				return;
 			}, function(errorlog){
 				//실패
-				jsonStr.push(errorlog);
+				console.log("Get dailyPriceByCategoryList fail: weekend");
+				jsonStr.push(new Array());
 				diff++;
 				newDate = new Date(date.getFullYear(),date.getMonth(), date.getDate() - 1);
 				if(diff == 5){
@@ -305,13 +320,10 @@ var RequestaFewDaysAgoPromise =  function(date, category_code, tempArr){
 			var length = Object.keys(jsondata).length;
 	
 			for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
-				if(jsondata[TodayPriceInfo.getJ()].dpr1 == '-' || jsondata[TodayPriceInfo.getJ()].dpr6 == '-' || jsondata[TodayPriceInfo.getJ()].dpr7 == '-')
-					continue;
 				jsondata[TodayPriceInfo.getJ()].CommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100;
 				jsondata[TodayPriceInfo.getJ()].YearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100;
 	
 				var i;
-	
 				for(i = 0; i < tempArr.length; i++){
 					if(jsondata[TodayPriceInfo.getJ()].item_name == tempArr[i].item_name && jsondata[TodayPriceInfo.getJ()].kind_name == tempArr[i].kind_name){
 						if(jsondata[TodayPriceInfo.getJ()].rank == '중품'){
