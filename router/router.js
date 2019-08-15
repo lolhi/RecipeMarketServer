@@ -785,11 +785,11 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                 cid: "TC0ONETIME",                                                  // 가맹점 코드, 10자, String
                 //cid_secret: "gg",                                                 // 가맹점 코드 인증키, 24자 숫자 + 영문 소문자, String
 				partner_order_id: "1",                                              // 가맹점 주문번호, 최대 100자, String
-				partner_user_id: "1",                                               // 가맹점 회원 id, 최대 100자, String
-				item_name: "당근",                                                  // 상품명, 최대 100자, String
+				partner_user_id: req.body.id,                                       // 가맹점 회원 id, 최대 100자, String
+				item_name: req.body.product_name,                                   // 상품명, 최대 100자, String
 				//item_code: "02",                                                  // 상품코드, 최대 100자, String  
-				quantity: 300,                                                      // 상품 수량, Integer
-				total_amount: 5000,                                                 // 상품 총액, Integer
+				quantity: req.body.quantity,                                        // 상품 수량, Integer
+				total_amount: req.body.total_amount,                                // 상품 총액, Integer
                 tax_free_amount: 0,                                                 // 상품 비과세 금액, Integer
                 //vat_amount: 0,                                                    // 상품 부가세 금액(안보낼 경우 (상품총액 - 상품 비과세 금액)/11 : 소숫점이하 반올림), Integer
                 approval_url: 'https://' + config.domain + '/readysuccess',         // 결제 성공시 redirect url. 최대 255자, String
