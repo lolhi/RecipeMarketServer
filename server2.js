@@ -146,6 +146,7 @@ function GetTodayPriceInfo(){
 					jsonStr[0][k].item_name == jsonStr[2][k].item_name && jsonStr[0][k].kind_name == jsonStr[2][k].kind_name &&
 					jsonStr[0][k].item_name == jsonStr[3][k].item_name && jsonStr[0][k].kind_name == jsonStr[3][k].kind_name &&
 					jsonStr[0][k].item_name == jsonStr[4][k].item_name && jsonStr[0][k].kind_name == jsonStr[4][k].kind_name){
+
 						if(jsonStr[0][k].dpr1 == '-' || jsonStr[0][k].dpr6 == '-' || jsonStr[0][k].dpr7 == '-' ||
 							jsonStr[1][k].dpr1 == '-' || jsonStr[1][k].dpr6 == '-' || jsonStr[1][k].dpr7 == '-' ||
 							jsonStr[2][k].dpr1 == '-' || jsonStr[2][k].dpr6 == '-' || jsonStr[2][k].dpr7 == '-' ||
@@ -327,6 +328,8 @@ var RequestaFewDaysAgoPromise =  function(date, category_code, tempArr){
 			var length = Object.keys(jsondata).length;
 	
 			for(TodayPriceInfo.setJ(0); TodayPriceInfo.getJ() < length; TodayPriceInfo.setJ(TodayPriceInfo.getJ() + 1)){
+				if(jsondata[TodayPriceInfo.getJ()].dpr1 == '-')
+					jsondata[TodayPriceInfo.getJ()].dpr1 = jsondata[TodayPriceInfo.getJ()].dpr2;
 				jsondata[TodayPriceInfo.getJ()].CommonYearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr7.replace(",","")) * 100;
 				jsondata[TodayPriceInfo.getJ()].YearReduction = (Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) - Number(jsondata[TodayPriceInfo.getJ()].dpr1.replace(",",""))) / Number(jsondata[TodayPriceInfo.getJ()].dpr6.replace(",","")) * 100;
 	
