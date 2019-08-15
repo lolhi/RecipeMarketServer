@@ -62,6 +62,8 @@ app.use(bodyParser.urlencoded({
 //var server = app.listen(8080, function(){
 // console.log("Express server has started on port 8080");
 //});
+var domains = new Array();
+domains.push(config.domain);
 
 require('greenlock-express').create({
 	version: 'draft-11', // 버전2
@@ -69,7 +71,7 @@ require('greenlock-express').create({
 	store: require('greenlock-store-fs'),
 	server: 'https://acme-v02.api.letsencrypt.org/directory',  
  	//server: 'https://acme-staging-v02.api.letsencrypt.org/directory',
-  	approveDomains: config.domain,
+  	approveDomains: domains,
 	email: config.email,
 	agreeTos: true,
   	renewWithin: 81 * 24 * 60 * 60 * 1000,
