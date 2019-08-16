@@ -460,6 +460,23 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
         })
     });
 
+    app.get('/GetShoppingItem',function(req, res){
+        var shoppingItem = require('../img/shopping/ShoppingItem');
+        res.json(shoppingItem.getShoppingItem);
+    });
+
+    app.get('/img/:PATH/:IMGSRC', function(req,res){
+        fs.readFile(__dirname + "/../img/" + req.params.PATH + '/' + req.params.IMGSRC,function(err,data){
+            if(err){
+                console.log(err);
+                return;
+            }
+            res.writeHead(200, { "Content-Type": "image/jpg" });
+            res.write(data);
+            res.end();
+        })//end readFile()
+      })//end app.get()
+
     app.get('/img/:IMGSRC', function(req,res){
         fs.readFile(__dirname + "/../img/" + req.params.IMGSRC,function(err,data){
             if(err){
