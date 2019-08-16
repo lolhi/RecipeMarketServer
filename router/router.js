@@ -1,4 +1,4 @@
-module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData){
+module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData, UserBasket){
     var searchres;
     var tid;
     var uid;
@@ -510,7 +510,86 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             res.json(ud.RECENTSEARCH);
         });
     });
+    
+    app.post('/GetBasket' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
 
+        UserBasket.DBname.findOne({ID: req.body.id}, function(err, ub){
+            if(err) return res.status(500).json({ error: "get basket fail" });
+
+            if(ub != null){
+                res.json(ub.BASKETITEM);
+            }
+            else {
+                res.status(200).end('no item');
+            }
+        });
+    });
+
+    app.post('/AddBasket' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+
+        UserBasket.DBname.findOne({ID: req.body.id}, function(err, ub){
+            if(err) return res.status(500).json({ error: "add basket fail" });
+
+            if(ub != null){
+                //user가 장바구니에 아이템이 있음
+                var i;
+                for(i = 0; i < ub.BASKETITEM.length; i++){
+                    if(ub.BASKETITEM[i].PRODUCT_NM == req.body.prduct_name){
+                        //같은 이름을 가진 아이템을 찾음
+                        ub.BASKETITEM[i].QUANTITY += req.body.quantity;
+                        ub.BASKETITEM[i].TOTAL_AMOUNT += req.body.total_amount;
+                        break;
+                    }
+                }
+
+                if(i == ub.BASKETITEM.length){
+                    //같은 이름을 가진 아이템이 없음
+                    var obj = new Object();
+                    obj.PRODUCT_NM = req.body.prduct_name;
+                    obj.QUANTITY = req.body.quantity;
+                    obj.TOTAL_AMOUNT = req.body.total_amount;
+                    ub.BASKETITEM.push(obj);
+                }
+
+                UserBasket.DBname.findOneAndUpdate({ID: req.body.id}, {$set:{BASKETITEM: ud.BASKETITEM}}, function(err1, reply){
+                    if(err1) return res.status(500).json({ error: "add basket fail" });
+    
+                    res.status(200).end('add basket complete');
+                });
+            }
+            else{
+                // user 장바구니에 아이템이 없음
+                var item = new Array();
+                var obj = new Object();
+                obj.PRODUCT_NM = req.body.product_name;
+                obj.QUANTITY = req.body.quantity;
+                obj.TOTAL_AMOUNT = req.body.total_amount;
+                item.push(obj);
+
+                var newUserBasket = new UserBasket.DBname({
+                    ID: req.body.id,
+                    BASKETITEM : item
+                });
+
+                newUserBasket.save(function(err){
+                    if(err){
+                        console.error(err);
+                        return;
+                    }
+                    console.log('db save success');
+                    res.status(200).end('add basket complete');
+                });
+            }
+        });
+    });
 
     app.post('/AddComment' ,function(req, res){
         if(!isFormData(req)){

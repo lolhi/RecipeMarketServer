@@ -86,10 +86,11 @@ var RecipeMaterial = new DBClass(require('./models/recipe_material'));
 var RecipeProcess = new DBClass(require('./models/recipe_process'));
 var TodaySpecialPrice = new DBClass(require('./models/today_sprecial_price'));
 var UserData = new DBClass(require('./models/userdata'));
+var UserBasket = new DBClass(require('./models/userbasket'));
 var Notice = new DBClass(require('./models/notice'));
 var TodayPriceInfo = new DBClass('');
 
-var router = require('./router/router')(app, request,config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData);
+var router = require('./router/router')(app, request,config, RecipeBasics, RecipeMaterial, RecipeProcess, TodaySpecialPrice, Notice, fs, UserData, UserBasket);
 
 var ServiceKey = config.ServiceKey;
 
