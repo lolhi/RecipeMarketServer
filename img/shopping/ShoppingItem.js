@@ -1,12 +1,11 @@
 var config = require('../../config');
+var arrays = new Array();
+arrays.push(MakeObject('라니네 농수산물', '제주도에서 온 미니밤호박 5kg', 2500, 26000, 'hobak_main.png', 'hobak_detail.jpg'));
+arrays.push(MakeObject('라니네 농수산물', '소양강 꿀 고구마 한 박스', 2500, 29000, 'goguma_main.png', 'goguma_detail.jpg'));
+arrays.push(MakeObject('라니네 농수산물', '무농약 영월 양배추 3~4포기', 2500, 17000, 'yangbaechu_main.png', 'yangbaechu_detail.jpg'));
+
 module.exports = { 
-    getShoppingItem: function() {
-        var arrays = new Array();
-        arrays.push(MakeObject('라니네 농수산물', '제주도에서 온 미니밤호박 5kg', 2500, 26000, 'hobak_main.png', 'hobak_detail.jpg'));
-        arrays.push(MakeObject('라니네 농수산물', '소양강 꿀 고구마 한 박스', 2500, 29000, 'goguma_main.png', 'goguma_detail.jpg'));
-        arrays.push(MakeObject('라니네 농수산물', '무농약 영월 양배추 3~4포기', 2500, 17000, 'yangbaechu_main.png', 'yangbaechu_detail.jpg'));
-        return arrays;
-    }
+    getShoppingItem: arrays
 };
 
 function MakeObject(sShopName, sProductName, iDeliverCost, iProductCost, sProductImg, sProductImgDetail){
