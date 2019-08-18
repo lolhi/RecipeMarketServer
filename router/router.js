@@ -524,7 +524,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                 res.json(ub.BASKETITEM);
             }
             else {
-                res.status(200).end('no item');
+                res.status(200).end('');
             }
         });
     });
@@ -575,7 +575,7 @@ console.log('i: ' + i + ', len: ' + ub.BASKETITEM.length);
                 var item = new Array();
                 var obj = new Object();
                 obj.SHOP_NM = req.body.shop_name;
-                obj.PRODUCT_NM = req.body.prduct_name;
+                obj.PRODUCT_NM = req.body.product_name;
                 obj.PRODUCT_COST = req.body.product_cost;
                 obj.DELIVER_COST = req.body.deliver_cost;
                 obj.QUANTITY = req.body.quantity;
