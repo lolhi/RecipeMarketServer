@@ -528,6 +528,34 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             }
         });
     });
+
+    app.post('/DeleteBasket' ,function(req, res){
+        if(!isFormData(req)){
+		    res.status(400).end('Bad Request : expecting multipart/form-data');
+		    return;
+        }
+
+        UserBasket.DBname.findOne({ID: req.body.id}, function(err, ub){
+            if(err) return res.status(500).json({ error: "delete basket fail" });
+
+            if(ub != null){
+                //user가 장바구니에 아이템이 있음
+                var i;
+                for(i = 0; i < ub.BASKETITEM.length; i++){
+                    if(ub.BASKETITEM[i].PRODUCT_NM == req.body.product_name){
+                        //같은 이름을 가진 아이템을 찾음
+                        ub.BASKETITEM.splice(i, 1);
+                        break;
+                    }
+                }
+
+                UserBasket.DBname.findOneAndUpdate({ID: req.body.id}, {$set:{BASKETITEM: ub.BASKETITEM}}, function(err1, reply){
+                    if(err1) return res.status(500).json({ error: "delete basket fail" });
+    
+                    res.status(200).end('delete basket complete');
+                });
+            }
+        });
     
     app.post('/AddBasket' ,function(req, res){
         if(!isFormData(req)){
@@ -544,13 +572,11 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
                 for(i = 0; i < ub.BASKETITEM.length; i++){
                     if(ub.BASKETITEM[i].PRODUCT_NM == req.body.product_name){
                         //같은 이름을 가진 아이템을 찾음
-console.log('find');
                         ub.BASKETITEM[i].QUANTITY += req.body.quantity;
                         ub.BASKETITEM[i].TOTAL_AMOUNT += req.body.total_amount;
                         break;
                     }
                 }
-console.log('i: ' + i + ', len: ' + ub.BASKETITEM.length);
                 if(i == ub.BASKETITEM.length){
                     //같은 이름을 가진 아이템이 없음
                     var obj = new Object();
