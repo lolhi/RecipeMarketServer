@@ -528,7 +528,7 @@ module.exports = function(app, request, config, RecipeBasics, RecipeMaterial, Re
             }
         });
     });
-
+    
     app.post('/AddBasket' ,function(req, res){
         if(!isFormData(req)){
 		    res.status(400).end('Bad Request : expecting multipart/form-data');
@@ -554,9 +554,13 @@ console.log('i: ' + i + ', len: ' + ub.BASKETITEM.length);
                 if(i == ub.BASKETITEM.length){
                     //같은 이름을 가진 아이템이 없음
                     var obj = new Object();
+                    obj.SHOP_NM = req.body.shop_name;
                     obj.PRODUCT_NM = req.body.product_name;
+                    obj.PRODUCT_COST = req.body.product_cost;
+                    obj.DELIVER_COST = req.body.deliver_cost;
                     obj.QUANTITY = req.body.quantity;
                     obj.TOTAL_AMOUNT = req.body.total_amount;
+                    obj.IMG = req.body.img;
                     ub.BASKETITEM.push(obj);
                 }
 
@@ -570,9 +574,13 @@ console.log('i: ' + i + ', len: ' + ub.BASKETITEM.length);
                 // user 장바구니에 아이템이 없음
                 var item = new Array();
                 var obj = new Object();
-                obj.PRODUCT_NM = req.body.product_name;
+                obj.SHOP_NM = req.body.shop_name;
+                obj.PRODUCT_NM = req.body.prduct_name;
+                obj.PRODUCT_COST = req.body.product_cost;
+                obj.DELIVER_COST = req.body.deliver_cost;
                 obj.QUANTITY = req.body.quantity;
                 obj.TOTAL_AMOUNT = req.body.total_amount;
+                obj.IMG = req.body.img;
                 item.push(obj);
 
                 var newUserBasket = new UserBasket.DBname({
